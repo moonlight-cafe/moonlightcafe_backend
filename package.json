@@ -1,0 +1,39 @@
+{
+  "name": "webservice",
+  "version": "1.0.0",
+  "description": "Moonlight Cafe Backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jainil-Mithaiwala/moonlightcafe.git"
+  },
+  "keywords": [
+    "moonlightcafe"
+  ],
+  "author": "Jainil",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jainil-Mithaiwala/moonlightcafe/issues"
+  },
+  "homepage": "https://github.com/Jainil-Mithaiwala/moonlightcafe#readme",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "cloudinary": "^2.6.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-fileupload": "^1.5.1",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.0",
+    "nodemailer": "^7.0.3",
+    "path": "^0.12.7"
+  }
+}
