@@ -13,8 +13,9 @@ const server = http.createServer(app);
 const port = Config.port || 10000;
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://your-frontend-domain.com'],
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type'],
 }));
 
 app.use(express.json({ limit: '50mb' }));
