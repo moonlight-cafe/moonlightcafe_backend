@@ -13,8 +13,8 @@ const app = express()
 const server = http.createServer(app)
 
 app.use(cors({
-    origin: "*",
-    credentials: true
+    origin: "",
+    // credentials: true
 }));
 app.use(fileUpload());
 app.use(express.json({ limit: '50mb' }))
