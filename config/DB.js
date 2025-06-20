@@ -53,8 +53,8 @@ class DB {
                         
                         console.log("🚀 ~ DB.js:51 ~ DB ~ connectDB ~ connectionstring>>", connectionstring);
                         this.mongoose = _mongoose.createConnection(connectionstring, {
-                            useNewUrlParser: true,
-                            useUnifiedTopology: true,
+                            // useNewUrlParser: true,
+                            // useUnifiedTopology: true,
                             retryWrites: true,
                             readPreference: "nearest"
                         });
@@ -331,8 +331,9 @@ class DB {
                 auth: {
                     // user: "jainilmithaiwala@gmail.com",
                     // pass: "rerb hqtd zbsc dyig"
-                    user: "web.moonlight.cafe@gmail.com",
-                    pass: "rlru inif kbwt dsor"
+                    user: Config.mailid,
+                    pass: Config.mailpass
+                    // pass: "rlru inif kbwt dsor"
                 }
             };
             // const emailSmtpResp = await this.getmenual('tblemailsmtp', new _EmailSMTP(), mailsmtpPipeline);
