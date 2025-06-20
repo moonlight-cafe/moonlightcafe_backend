@@ -6,6 +6,9 @@ class Config {
                 this.dataencryption = false;
                 this.tokenkey = process.env.TOKEN_KEY;
 
+                this.mailid = process.env.SMTP_MAIL
+                this.mailpass = process.env.SMTP_PASS
+
                 if (this.servermode == "local") {
                         // Development
                         this.port = process.env.PORT;
