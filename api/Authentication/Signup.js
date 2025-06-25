@@ -137,19 +137,17 @@ class Signup {
 
                         if (!user) {
                                 req.ResponseBody = {
-                                        status: 401,
+                                        status: 400,
                                         message: "No account found with this email or number."
                                 };
                                 return next()
                         }
 
-                        let tmpKey = user.password.split(".")[1];
-
                         const isMatch = Methods.decryptPassword(user.password, user.create_at);
                         if (isMatch !== password) {
                                 req.ResponseBody = {
                                         status: 400,
-                                        message: Config.errmsg['invalidcredentials']
+                                        message: "Invalid Password!"
                                 }
                                 return next()
                         }
