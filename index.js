@@ -12,11 +12,22 @@ const app = express();
 const server = http.createServer(app);
 const port = Config.port || 10000;
 
+const allowedOrigins = [
+    'https://moonlightcafe.vercel.app',
+    'http://localhost:3000'
+];
+
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
 }));
+
 
 app.use(express.json({ limit: '50mb' }));
 app.use(fileUpload());

@@ -27,6 +27,8 @@ class OTP {
                         }
 
                         const otp = Methods.generateRandomNumber(6);
+                        console.log("🚀 ~ OTP.js:30 ~ OTP ~ OTPSend ~ otp>>", otp);
+
 
                         const data = {
                                 customerid: new ObjectId(customerdata.ResultData[0]._id),
@@ -83,7 +85,7 @@ class OTP {
                         { $limit: 1 },
                         ]);
 
-                        if (!otpRecords || otpRecords.length === 0) {
+                        if (!otpRecords || otpRecords.ResultData.length === 0) {
                                 req.ResponseBody = {
                                         status: 404,
                                         message: "No OTP found for this customer",
@@ -108,18 +110,33 @@ class OTP {
 
                         if (otpRecord.attempt >= 3) {
                                 req.ResponseBody = {
-                                        status: 429,
+                                        status: 400,
                                         message: "Too many attempts. New OTP has been generated.",
                                 };
                                 return next();
                         }
+
+                        if (otpRecord.isverified == 1) {
+                                req.ResponseBody = {
+                                        status: 400,
+                                        message: "OTP has been Already Verified.",
+                                };
+                                return next();
+                        }
+
+
                         if (enteredOtp == otpRecord.otp) {
+                                const tokenval = Methods.generateuuid()
                                 await MainDB.Update("tblcafe_forgetpasswords", new _OTP(), [{ _id: new ObjectId(otpRecord._id) }, {
                                         isverified: 1,
+                                        token: tokenval,
+                                        verifiedtoken: 0,
+                                        tokentimestamp: Methods.getdatetimeisostr(),
                                 }]);
 
                                 req.ResponseBody = {
                                         status: 200,
+                                        token: tokenval,
                                         message: "OTP verified successfully",
                                 };
                                 return next();
@@ -136,6 +153,60 @@ class OTP {
                                 return next();
                         }
                 } catch (err) {
+                        console.error("Error: ", err);
+                        req.ResponseBody = {
+                                status: 500,
+                                message: Config.resstatuscode["500"],
+                        };
+                        next();
+                }
+        }
+
+        async OTPTokenverify(req, res, next) {
+                try {
+                        let ResponseBody = {}
+                        const otpTokenRecords = await MainDB.getmenual("tblcafe_forgetpasswords", new _OTP(), [{ $match: { customeemail: req.body.email, isverified: 1, verifiedtoken: 0 } },
+                        { $sort: { _id: -1 } },
+                        { $limit: 1 },
+                        ]);
+
+                        if (otpTokenRecords.ResultData.length == 0) {
+                                req.ResponseBody = {
+                                        status: 404,
+                                        message: "No OTP found for this customer",
+                                };
+                                return next();
+                        }
+
+                        if (req.body.verify != otpTokenRecords.ResultData[0].token) {
+                                ResponseBody.status = 400
+                                ResponseBody.message = "Invalid Token"
+                        }
+
+                        const createdAt = new Date(otpTokenRecords.ResultData[0].tokentimestamp);
+                        const now = new Date();
+                        const diffMs = now - createdAt;
+                        const diffMinutes = diffMs / 1000 / 60;
+
+                        if (diffMinutes > 5) {
+                                req.ResponseBody = {
+                                        status: 400,
+                                        message: "Token has expired. Please Try Again Later.",
+                                };
+                                return next();
+                        }
+
+                        await MainDB.Update("tblcafe_forgetpasswords", new _OTP(), [{ _id: new ObjectId(otpTokenRecords.ResultData[0]._id) }, {
+                                verifiedtoken: 1,
+                        }]);
+
+                        req.ResponseBody = {
+                                status: 200,
+                                message: "Token verified successfully",
+                        };
+                        next()
+
+                } catch (error) {
                         console.error("Error: ", err);
                         req.ResponseBody = {
                                 status: 500,

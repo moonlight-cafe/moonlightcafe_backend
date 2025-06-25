@@ -10,6 +10,7 @@ class AddToCart {
                                 data: req.body.data,
                                 totalamount: req.body.totalamount,
                                 includetip: req.body.includetip,
+                                tipamount: req.body.tipamount,
                                 create_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString(),
                         };

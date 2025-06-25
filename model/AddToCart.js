@@ -14,6 +14,7 @@ export default class Category {
                 }]
                 this.totalamount = { type: String, default: "" }
                 this.includetip = { type: Number, default: 0 } // 0: No Tip 1: include Tip
+                this.tipamount = { type: Number, default: 0 }
                 this.create_at = { type: String, default: "" }
                 this.updated_at = { type: String, default: "" }
         }

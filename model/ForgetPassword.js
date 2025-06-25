@@ -8,6 +8,9 @@ export default class OTP {
                 this.oldpassword = { type: String, default: "" }
                 this.newpassword = { type: String, default: "" }
                 this.otp = { type: String, default: "" }
+                this.token = { type: String, default: "" }
+                this.verifiedtoken = { type: Number, default: 0 }
+                this.tokentimestamp = { type: String, default: "" }
                 this.attempt = { type: Number, default: 0 }             //   Only 3 attempt
                 this.isverified = { type: Number, default: 0 }          //   1: OTP Verified
                 this.create_at = { type: String, default: "" }

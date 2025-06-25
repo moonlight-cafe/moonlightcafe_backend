@@ -37,6 +37,7 @@ router.post(Config.endpointv1 + "/login", Apisignup.Login, sendResponse)
 
 router.post(Config.endpointv1 + "/customer/details", ApiCustomerAction.ListCustomerDetails, sendResponse)
 router.post(Config.endpointv1 + "/customer/update", ApiCustomerAction.UpdateCustomerDetails, sendResponse)
+router.post(Config.endpointv1 + "/customer/update/pwd", ApiCustomerAction.PassWordUpdateSecure, sendResponse)
 
 router.post(Config.endpointv1 + "/category", APICategory.ListCategories, sendResponse)
 router.post(Config.endpointv1 + "/add/category", APICategory.AddCategories, sendResponse)
@@ -60,6 +61,7 @@ router.post(Config.endpointv1 + "/viewcart", AddToCart.ViewCart, sendResponse)
 
 router.post(Config.endpointv1 + "/send/otp", APIOTP.OTPSend, sendResponse)
 router.post(Config.endpointv1 + "/verify/otp", APIOTP.OTPverify, sendResponse)
+router.post(Config.endpointv1 + "/verify/otp/token", APIOTP.OTPTokenverify, sendResponse)
 
 router.post(Config.endpointv1 + "/file/upload", FileUpload.fileupload, sendResponse)
 export default router
