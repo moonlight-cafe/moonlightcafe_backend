@@ -14,7 +14,8 @@ const port = Config.port || 10000;
 
 const allowedOrigins = [
     'https://moonlightcafe.vercel.app',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://192.168.1.2:3000',
 ];
 
 app.use(cors({
