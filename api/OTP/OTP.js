@@ -165,6 +165,7 @@ class OTP {
         async OTPTokenverify(req, res, next) {
                 try {
                         let ResponseBody = {}
+                        // await new Promise(resolve => setTimeout(resolve, 60000));
                         const otpTokenRecords = await MainDB.getmenual("tblcafe_forgetpasswords", new _OTP(), [{ $match: { customeemail: req.body.email, isverified: 1, verifiedtoken: 0 } },
                         { $sort: { _id: -1 } },
                         { $limit: 1 },

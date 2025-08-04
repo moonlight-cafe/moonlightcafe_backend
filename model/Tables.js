@@ -1,3 +1,5 @@
+import mongoose from "mongoose"
+
 export default class Category {
         constructor() {
                 this._id
@@ -7,5 +9,7 @@ export default class Category {
                 this.url = { type: String, default: "" }
                 this.create_at = { type: String, default: "" }
                 this.updated_at = { type: String, default: "" }
+                this.usedby = { type: mongoose.Schema.Types.ObjectId, default: null }
+                this.usedbyname = { type: String, default: "" }
         }
 }
