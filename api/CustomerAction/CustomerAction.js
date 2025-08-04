@@ -44,9 +44,7 @@ class CustomerAction {
                 }
         }
 
-        async PassWordUpdateSecure(req, res, next) {
-                console.log("🚀 ~ CustomerAction.js:48 ~ CustomerAction ~ PassWordUpdateSecure ~ req>>", req.bode);
-
+        async PassWordResetSecure(req, res, next) {
                 try {
                         let ResponseBody = {}
 
@@ -67,9 +65,6 @@ class CustomerAction {
                         }
 
                         const password = Methods.encryptPassword(req.body.password, checkMail.ResultData[0].create_at);
-                        console.log("🚀 ~ CustomerAction.js:70 ~ CustomerAction ~ PassWordUpdateSecure ~ password>>", password);
-                        console.log("🚀 ~ CustomerAction.js:73 ~ CustomerAction ~ PassWordUpdateSecure ~ checkMail.ResultData[0].password>>", checkMail.ResultData[0].password);
-
                         if (checkMail.ResultData[0].password == password) {
 
                                 ResponseBody.status = 400
@@ -95,6 +90,84 @@ class CustomerAction {
                         next()
                 }
         }
+
+        async PassWordUpdateSecure(req, res, next) {
+                try {
+                        let ResponseBody = {};
+
+                        if (req.body.oldpassword === req.body.newpassword) {
+                                ResponseBody.status = 400;
+                                ResponseBody.message = "New password cannot be same as old password.";
+                                req.ResponseBody = ResponseBody;
+                                return next();
+                        }
+
+                        const checkMail = await MainDB.getmenual(
+                                "tblcafe_customerdetails",
+                                new _CustomerDetails(),
+                                [{ $match: { email: req.body.email } }]
+                        );
+
+                        if (!checkMail.ResultData.length) {
+                                ResponseBody.status = 400;
+                                ResponseBody.message = "Email not found.";
+                                req.ResponseBody = ResponseBody;
+                                return next();
+                        }
+
+                        const verifypwd = Methods.validatePassword(req.body.newpassword);
+                        if (verifypwd.status !== 200) {
+                                console.error("Password validation failed:", verifypwd.message);
+                                return res.status(verifypwd.status).json(verifypwd);
+                        }
+
+                        // Step 3: Validate old password
+                        const dbUser = checkMail.ResultData[0];
+                        const encryptedOldPassword = Methods.decryptPassword(dbUser.password, dbUser.create_at)
+
+                        if (req.body.oldpassword !== encryptedOldPassword) {
+                                ResponseBody.status = 400;
+                                ResponseBody.message = "Old password is incorrect.";
+                                req.ResponseBody = ResponseBody;
+                                return next();
+                        }
+                        const encryptedNewPassword = Methods.encryptPassword(req.body.newpassword, dbUser.create_at);
+
+
+                        if (dbUser.password === encryptedNewPassword) {
+                                ResponseBody.status = 400;
+                                ResponseBody.message = "New password cannot be same as old password.";
+                                req.ResponseBody = ResponseBody;
+                                return next();
+                        }
+
+                        const updatepassword = await MainDB.Update(
+                                "tblcafe_customerdetails",
+                                new _CustomerDetails(),
+                                [
+                                        { email: req.body.email },
+                                        {
+                                                password: encryptedNewPassword,
+                                                updated_at: Methods.getdatetimeisostr()
+                                        }
+                                ]
+                        );
+
+                        ResponseBody.status = updatepassword.status;
+                        ResponseBody.message = updatepassword.status == 200 ? "Password updated successfully." : updatepassword.message;
+                        req.ResponseBody = ResponseBody;
+                        next();
+
+                } catch (error) {
+                        console.error(error);
+                        req.ResponseBody = {
+                                status: 500,
+                                message: "Internal Server Error"
+                        };
+                        next();
+                }
+        }
+
 }
 
 export default CustomerAction

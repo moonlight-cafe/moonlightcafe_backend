@@ -92,7 +92,7 @@ class Signup {
                         let senddata = {
                                 name: name,
                         };
-                        await MainDB.sendMail(2, 'lagurudhrapujaday1@gmail.com', [email], template, '', senddata);
+                        await MainDB.sendMail(2, '', [email], template, '', senddata);
 
                         req.ResponseBody = {
                                 status: check.status,
@@ -120,15 +120,12 @@ class Signup {
                                         status: 400,
                                         message: "Please provide both email/number and password."
                                 };
-                                return next()
+                                return next();
                         }
 
                         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(code);
                         const matchField = isEmail ? { email: code } : { number: code };
 
-                        // const userResult = await MainDB.getmenual("tblcafe_employees", new _Employees(), [
-                        //         { $match: matchField }
-                        // ]);
                         const userResult = await MainDB.getmenual("tblcafe_customerdetails", new _CustomerDetails(), [
                                 { $match: matchField }
                         ]);
@@ -140,31 +137,64 @@ class Signup {
                                         status: 400,
                                         message: "No account found with this email or number."
                                 };
-                                return next()
+                                return next();
+                        }
+
+                        // Check if account is locked
+                        const now = new Date();
+
+
+                        if (user.lockUntil && user.lockUntil > now) {
+                                const minutes = Math.ceil((user.lockUntil - now) / (60 * 1000));
+                                req.ResponseBody = {
+                                        status: 403,
+                                        message: `Account is temporarily locked. Try again in ${minutes} minute(s).`
+                                };
+                                return next();
                         }
 
                         const isMatch = Methods.decryptPassword(user.password, user.create_at);
                         if (isMatch !== password) {
+                                // Increase failed login attempts
+                                const newAttempts = (user.failedLoginAttempts || 0) + 1;
+
+                                const updateFields = {
+                                        failedLoginAttempts: newAttempts
+                                };
+
+                                if (newAttempts >= 5) {
+                                        updateFields.lockUntil = new Date(Date.now() + 2 * 60 * 1000); // 10 minutes
+                                        updateFields.failedLoginAttempts = 0; // reset count after locking
+                                }
+
+                                const check = await MainDB.Update("tblcafe_customerdetails", new _CustomerDetails(), [{ _id: user._id }, updateFields]);
+
+
                                 req.ResponseBody = {
                                         status: 400,
                                         message: "Invalid Password!"
-                                }
-                                return next()
+                                };
+                                return next();
                         }
 
-                        const uid = user._id
-                        const unqkey = Methods.generateuuid()
+                        // Successful login: reset failed attempts
+                        await MainDB.Update("tblcafe_customerdetails", user._id, {
+                                failedLoginAttempts: 0,
+                                lockUntil: null
+                        });
 
-                        var token = await MainDB.getjwt(uid, unqkey)
+                        const uid = user._id;
+                        const unqkey = Methods.generateuuid();
+                        const token = await MainDB.getjwt(uid, unqkey);
 
                         req.ResponseBody = {
                                 status: 200,
                                 message: "Success! You're logged in.",
-                                name: userResult.ResultData[0].name,
-                                number: userResult.ResultData[0].number,
-                                email: userResult.ResultData[0].email,
-                                _id: userResult.ResultData[0]._id,
-
+                                name: user.name,
+                                number: user.number,
+                                email: user.email,
+                                _id: user._id,
+                                token: token
                         };
 
                         return next();
@@ -178,6 +208,7 @@ class Signup {
                         return next();
                 }
         }
+
 }
 
 

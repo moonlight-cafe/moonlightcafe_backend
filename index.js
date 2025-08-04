@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const port = Config.port || 10000;
+const port = Config.port || 8080;
 
 const allowedOrigins = [
     'https://moonlightcafe.vercel.app',

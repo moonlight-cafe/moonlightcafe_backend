@@ -46,11 +46,11 @@ class DB {
                 const connectDB = async () => {
                     try {
                         var connectionstring = "mongodb://" + this.DBHost + ":" + this.DBPort + "/" + this.DBName;
-                        if (Config.servermode == "prod" || Config.servermode == "uat" | Config.servermode == "dev") {
-                            connectionstring = "mongodb+srv://" + this.DBUser + ":" + this.DBPass + "@" + this.DBHost + "/" + this.DBName
-                            
-                        }
-                        
+                        console.log("🚀 ~ DB.js:50 ~ DB ~ connectDB ~ Config.servermode>>", Config.servermode);
+                        // if (Config.servermode == "prod" || Config.servermode == "uat" | Config.servermode == "dev") {
+                        //     connectionstring = "mongodb+srv://" + this.DBUser + ":" + this.DBPass + "@" + this.DBHost + "/" + this.DBName
+                        // }
+
                         console.log("🚀 ~ DB.js:51 ~ DB ~ connectDB ~ connectionstring>>", connectionstring);
                         this.mongoose = _mongoose.createConnection(connectionstring, {
                             // useNewUrlParser: true,
@@ -543,6 +543,40 @@ class DB {
 
         return resp
     }
+
+    async Delete(CollectionName, SchemaClassObj, filter, options = {}, insertlog = false) {
+
+        var resp = {
+            'status': 400,
+            'message': Config.errmsg['dberror']
+        }
+
+        try {
+            const ObjSchemaModel = this.createmodel(CollectionName, SchemaClassObj)
+            const result = await ObjSchemaModel['objModel'].deleteOne(filter, options)
+            resp.status = 200
+            resp.message = Config.errmsg['delete']
+            // return result
+
+        } catch (err) {
+            resp.message = Config.errmsg['dberror'] + ' ' + err.toString()
+            resp.status = 400
+
+            // In case of ValidationError (though unlikely in delete)
+            if (err.name === 'ValidationError') {
+                resp.message = Object.values(err.errors).map(val => val.message).toString()
+                resp.status = 400
+            }
+        }
+
+        if (insertlog == true) {
+            //insert Logs of Operation 
+            this.insertlogdata(_RequestBody, _RequestHeaders, _IpAddress, _URL, CollectionName, 'd', resp.status, resp.message)
+        }
+
+        return resp
+    }
+
 
     async UpdateMany(CollectionName, SchemaClassObj, pipeline) {
         const ObjSchemaModel = await this.createmodel(CollectionName, SchemaClassObj)

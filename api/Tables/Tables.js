@@ -1,6 +1,7 @@
 import { Config, Methods, MainDB } from "../../config/Init.js"
 import _Tables from "../../model/Tables.js"
 import _TakeAway from "../../model/TakeAway.js"
+import _CustomerData from '../../CustomerDetails/CustomerDetails.js'
 
 const ObjectId = Methods.getObjectId()
 class Table {
@@ -41,7 +42,7 @@ class Table {
                         let isUnique = false;
 
                         do {
-                                url = Methods.generateRandomString(20);
+                                url = Methods.generateRandomString(25);
 
                                 const existing = await MainDB.getmenual("tblcafe_tables", new _Tables(), [{ $match: { url: url } }]);
 
@@ -73,7 +74,17 @@ class Table {
         async BookTable(req, res, next) {
                 try {
                         let ResponseBody = {}
-                        const busytable = await MainDB.Update("tblcafe_tables", new _Tables(), [{ _id: new ObjectId(req.body._id) }, { isavailable: 0 }])
+
+                        const checkavailabletbl = await MainDB.getmenual("tblcafe_tables", new _Tables(), [{ $match: { _id: new ObjectId(req.body._id), isavailable: 1 } }])
+                        if (!checkavailabletbl.ResultData.length) {
+                                ResponseBody.status = 400
+                                ResponseBody.message = "Table is already Booked !"
+                                req.ResponseBody = ResponseBody
+                                return next()
+                        }
+                        const busytable = await MainDB.Update("tblcafe_tables", new _Tables(), [{ _id: new ObjectId(req.body._id) }, { isavailable: 0, usedby: new ObjectId(req.body.customerid), usedbyname: req.body.customername }])
+
+                        await MainDB.Update('tblcafe_customerdetails', new _CustomerData(), [{ _id: new ObjectId(req.body.customerid) }, { tblno: req.body.tableno, redirecturl: req.body.redirecturl }])
                         ResponseBody.status = busytable.status
                         ResponseBody.message = busytable.message
                         req.ResponseBody = ResponseBody

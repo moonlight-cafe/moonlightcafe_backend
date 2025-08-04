@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Moonlight Café - Customer Bill</title>
+        <style>
+                body {
+                        margin: 0;
+                        padding: 40px 0;
+                        background-color: #121212;
+                        font-family: 'Segoe UI', sans-serif;
+                        color: #f0f0f0;
+                }
+
+                .invoice {
+                        max-width: 600px;
+                        margin: auto;
+                        background-color: #1e1e1e;
+                        border-radius: 10px;
+                        padding: 30px;
+                        border: 2px solid #47d9a8;
+                        box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+                }
+
+                .invoice-header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                }
+
+                .invoice-header h1 {
+                        color: #47d9a8;
+                        margin: 0;
+                        font-size: 32px;
+                }
+
+                .invoice-subinfo {
+                        text-align: center;
+                        font-size: 14px;
+                        color: #bbbbbb;
+                        margin-top: 5px;
+                }
+
+                .details,
+                .items,
+                .summary {
+                        margin-top: 30px;
+                }
+
+                .details table,
+                .summary table {
+                        width: 100%;
+                        font-size: 15px;
+                        border-collapse: collapse;
+                }
+
+                .details td {
+                        padding: 6px 0;
+                }
+
+                .items {
+                        margin-top: 25px;
+                }
+
+                .items table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 15px;
+                }
+
+                .items th,
+                .items td {
+                        text-align: left;
+                        padding: 10px;
+                        border-bottom: 1px solid #333;
+                }
+
+                .items th {
+                        background-color: #47d9a8;
+                        color: #121212;
+                }
+
+                .summary td {
+                        padding: 8px 0;
+                }
+
+                .summary .total {
+                        font-size: 18px;
+                        font-weight: bold;
+                }
+
+                .footer {
+                        text-align: center;
+                        margin-top: 40px;
+                        font-size: 14px;
+                        color: #888;
+                }
+        </style>
+</head>
+
+<body>
+
+        <div class="invoice">
+                <div class="invoice-header">
+                        <h1>Moonlight Café</h1>
+                        <div class="invoice-subinfo">Bill Receipt</div>
+                </div>
+
+                <div class="details">
+                        <table>
+                                <tr>
+                                        <td><strong>Order No:</strong> ORD0000001</td>
+                                        <td style="text-align:right;"><strong>Date:</strong> 04 Aug 2025</td>
+                                </tr>
+                                <tr>
+                                        <td><strong>Customer:</strong> Bhavana</td>
+                                        <td style="text-align:right;"><strong>Table No:</strong> 1</td>
+                                </tr>
+                                <tr>
+                                        <td><strong>Order Type:</strong> Dine-In</td>
+                                        <td style="text-align:right;"><strong>Payment Mode:</strong> Cash</td>
+                                </tr>
+                        </table>
+                </div>
+
+                <div class="items">
+                        <table>
+                                <thead>
+                                        <tr>
+                                                <th>Item</th>
+                                                <th>Qty</th>
+                                                <th style="text-align:right;">Price</th>
+                                        </tr>
+                                </thead>
+                                <tbody>
+                                        <tr>
+                                                <td>Idli-Sambar</td>
+                                                <td>1</td>
+                                                <td style="text-align:right;">₹120</td>
+                                        </tr>
+                                        <tr>
+                                                <td>Veg Club Sandwich</td>
+                                                <td>1</td>
+                                                <td style="text-align:right;">₹249</td>
+                                        </tr>
+                                </tbody>
+                        </table>
+                </div>
+
+                <div class="summary">
+                        <table>
+                                <tr>
+                                        <td><strong>Subtotal:</strong></td>
+                                        <td style="text-align:right;">₹369.00</td>
+                                </tr>
+                                <tr>
+                                        <td><strong>Tip:</strong></td>
+                                        <td style="text-align:right;">₹0.00</td>
+                                </tr>
+                                <tr class="total">
+                                        <td><strong>Total Amount:</strong></td>
+                                        <td style="text-align:right;">₹369.00</td>
+                                </tr>
+                        </table>
+                </div>
+
+                <div class="footer">
+                        Thank you for dining with us! <br />
+                        Visit again at <strong>Moonlight Café</strong>.
+                </div>
+        </div>
+
+</body>
+
+</html>
