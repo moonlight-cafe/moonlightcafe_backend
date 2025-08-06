@@ -18,17 +18,24 @@ const allowedOrigins = [
     'http://192.168.1.2:3000',
 ];
 
+app.use((req, res, next) => {
+    console.log('Request Origin:', req.headers.origin);
+    next();
+});
+
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.error(`Blocked by CORS: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
     credentials: true,
 }));
 
+app.options('*', cors()); // preflight support
 
 app.use(express.json({ limit: '50mb' }));
 app.use(fileUpload());
