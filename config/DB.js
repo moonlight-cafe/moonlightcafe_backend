@@ -125,7 +125,7 @@ class DB {
                 HistoryData.body = RequestBody
                 HistoryData.headers = RequestHeaders
                 HistoryData.url = URL
-                await this.executedata('i', new _History(), 'tblnv_history', HistoryData, false)
+                await this.executedata('i', new _History(), 'tblcafe_history', HistoryData, false)
 
             }
         }
@@ -246,7 +246,7 @@ class DB {
                 LogDetails.ipaddress = IpAddress
                 LogDetails.logdatetime = Methods.getdatetimestr()
 
-                var response = await this.executedata('i', new _Logdata(), 'tblnv_log', LogDetails, false)
+                var response = await this.executedata('i', new _Logdata(), 'tblcafe_log', LogDetails, false)
             }
         }
         catch (e) {
@@ -382,7 +382,7 @@ class DB {
             // };
 
             const workerData = {
-                mailemailfrom: emailfrom || (emailSmtpResp.ResultData?.[0]?.email || "local@gmail.com"),
+                mailemailfrom: emailfrom /* || (emailSmtpResp.ResultData?.[0]?.email || "local@gmail.com") */,
                 to: emails,
                 mailsubject: subject || template.subject,
                 text: "",
@@ -637,7 +637,7 @@ class DB {
                     console.error('JWT Error:', err);
                 }
 
-                const add = await this.executedata('i', new _Tokenexpiry(), 'tblnv_expiry', data)
+                const add = await this.executedata('i', new _Tokenexpiry(), 'tblcafe_expiry', data)
                 return t;
             }
         } catch (err) {
@@ -661,7 +661,7 @@ class DB {
             if (decoded.uid === uid && decoded.unqkey === unqkey) {
                 const pipeline = [{ $match: { unqkey: unqkey, isvalid: '1' } }]
 
-                var responseData = await this.getmenual('tblnv_expiry', new _Tokenexpiry(), pipeline)
+                var responseData = await this.getmenual('tblcafe_expiry', new _Tokenexpiry(), pipeline)
 
                 if (responseData && responseData.ResultData[0]) {
                     id = responseData.ResultData[0]._id
@@ -689,7 +689,7 @@ class DB {
                 resp.autologout = true
             }
             if (id) {
-                const delResp = await this.executedata('d', new _Tokenexpiry(), 'tblnv_expiry', { _id: id })
+                const delResp = await this.executedata('d', new _Tokenexpiry(), 'tblcafe_expiry', { _id: id })
             }
         }
 
