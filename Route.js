@@ -36,6 +36,7 @@ router.all('*', setReqHeaderParams)
 router.get(Config.endpointv1 + '/healthcheck', Apisignup.health)
 router.post(Config.endpointv1 + "/register", Apisignup.Register, sendResponse)
 router.post(Config.endpointv1 + "/login", Apisignup.Login, sendResponse)
+router.post(Config.endpointv1 + "/google/login", Apisignup.GoogleLogin, sendResponse)
 
 router.post(Config.endpointv1 + "/customer/details", ApiCustomerAction.ListCustomerDetails, sendResponse)
 router.post(Config.endpointv1 + "/customer/update", ApiCustomerAction.UpdateCustomerDetails, sendResponse)

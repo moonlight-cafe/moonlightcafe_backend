@@ -209,6 +209,90 @@ class Signup {
                 }
         }
 
+        async GoogleLogin(req, res, next) {
+                try {
+                        const { name, email, number } = req.body;
+
+                        if (!email || !name) {
+                                req.ResponseBody = {
+                                        status: 400,
+                                        message: "Name and email are required for Google login."
+                                };
+                                return next();
+                        }
+
+                        const userResult = await MainDB.getmenual("tblcafe_customerdetails", new _CustomerDetails(), [
+                                {
+                                        $match: { email: email }
+                                }
+                        ]);
+
+                        let user = userResult?.ResultData?.[0];
+
+                        if (!user) {
+                                const now = Methods.getdatetimeisostr();
+                                const password = Methods.generateRandomString(16)
+                                console.log("🚀 ~ Signup.js:235 ~ Signup ~ GoogleLogin ~ password>>", password);
+
+                                const registerData = {
+                                        name,
+                                        email,
+                                        number: number || "",
+                                        create_at: now,
+                                        updated_at: now,
+                                        isGoogleAccount: 1,
+                                        // password: password
+                                };
+                                console.log("🚀 ~ Signup.js:246 ~ Signup ~ GoogleLogin ~ registerData>>", registerData);
+
+                                registerData.password = Methods.encryptPassword(password, now);
+                                const insertRes = await MainDB.executedata('i', new _CustomerDetails(), "tblcafe_customerdetails", registerData);
+                                console.log("🚀 ~ Signup.js:250 ~ Signup ~ GoogleLogin ~ insertRes>>", insertRes);
+
+                                if (insertRes.status !== 200) {
+                                        req.ResponseBody = {
+                                                status: 500,
+                                                message: "User registration via Google failed."
+                                        };
+                                        return next();
+                                }
+
+                                let template = Config.emailtemplates['googleloginmail'];
+                                let senddata = {
+                                        name: name,
+                                        email: email,
+                                        password: password
+                                };
+                                await MainDB.sendMail(2, 'web.moonlight.cafe@gmail.com', [email], template, '', senddata);
+                                user = registerData;
+                                user._id = insertRes.data._id;
+                        }
+
+                        const uid = user._id;
+                        const unqkey = Methods.generateuuid();
+                        const token = await MainDB.getjwt(uid, unqkey);
+
+                        req.ResponseBody = {
+                                status: 200,
+                                message: "Google login successful",
+                                name: user.name,
+                                number: user.number,
+                                email: user.email,
+                                _id: user._id,
+                                token: token
+                        };
+                        return next();
+                } catch (error) {
+                        console.error("Google login error:", error);
+                        req.ResponseBody = {
+                                status: 500,
+                                message: Config.resstatuscode["500"],
+                                error: error.message || error
+                        };
+                        return next();
+                }
+        }
+
 }
 
 

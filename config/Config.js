@@ -131,15 +131,20 @@ class Config {
                 };
 
                 this.emailtemplates = {
-                        'forgotpassword': {
-                                'subject': 'Reset your Password',
-                                'body': "/assets/htmltemplates/forgotpassword.html",
-                                'type': 20
-                        },
                         'welcomeletter': {
                                 'subject': "Welome To Moonlight Cafe",
                                 'body': "/assets/htmltemplates/welcomeletter.html",
-                                'type': 4,
+                                'type': 1,
+                        },
+                        'googleloginmail': {
+                                'subject': "Welome To Moonlight Cafe",
+                                'body': "/assets/htmltemplates/GoogleWelcomeMail.html",
+                                'type': 2,
+                        },
+                        'forgotpassword': {
+                                'subject': 'Reset your Password',
+                                'body': "/assets/htmltemplates/forgotpassword.html",
+                                'type': 3
                         },
                 }
 

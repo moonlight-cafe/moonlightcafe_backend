@@ -206,6 +206,44 @@ class Methods {
 
                 return result;
         }
+        generateRandomPassword(length = 20) {
+                // const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
+                // let result = '';
+                // const charactersLength = characters.length;
+
+                // for (let i = 0; i < length; i++) {
+                //         result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                // }
+
+                // return result;
+                if (!Number.isInteger(length) || length < 4) {
+                        throw new Error('Password length must be an integer of at least 4 to include all character types.');
+                }
+
+                const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const lower = 'abcdefghijklmnopqrstuvwxyz';
+                const numbers = '0123456789';
+                const special = '!@#$%^&*()_+[]{}|;:,.<>?';
+                const all = upper + lower + numbers + special;
+
+                // Ensure at least one character from each group
+                let result = [
+                        upper.charAt(Math.floor(Math.random() * upper.length)),
+                        lower.charAt(Math.floor(Math.random() * lower.length)),
+                        numbers.charAt(Math.floor(Math.random() * numbers.length)),
+                        special.charAt(Math.floor(Math.random() * special.length))
+                ];
+
+                // Fill the rest randomly from the combined pool
+                for (let i = result.length; i < length; i++) {
+                        result.push(all.charAt(Math.floor(Math.random() * all.length)));
+                }
+
+                // Shuffle the result to avoid predictable pattern
+                return result
+                        .sort(() => Math.random() - 0.5)
+                        .join('');
+        }
         generateRandomNumber(length) {
                 const characters = '0123456789';
                 let result = '';
