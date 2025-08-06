@@ -45,10 +45,10 @@ class DB {
             if (this.DBType == "MONGODB" && this.DBName && this.DBHost && !check) {
                 const connectDB = async () => {
                     try {
-                        var connectionstring = "mongodb://" + this.DBHost + ":" + this.DBPort + "/" + this.DBName;
+                        // var connectionstring = "mongodb://" + this.DBHost + ":" + this.DBPort + "/" + this.DBName;
                         console.log("🚀 ~ DB.js:50 ~ DB ~ connectDB ~ Config.servermode>>", Config.servermode);
                         // if (Config.servermode == "prod" || Config.servermode == "uat" | Config.servermode == "dev") {
-                        //     connectionstring = "mongodb+srv://" + this.DBUser + ":" + this.DBPass + "@" + this.DBHost + "/" + this.DBName
+                            connectionstring = "mongodb+srv://" + this.DBUser + ":" + this.DBPass + "@" + this.DBHost + "/" + this.DBName
                         // }
 
                         console.log("🚀 ~ DB.js:51 ~ DB ~ connectDB ~ connectionstring>>", connectionstring);
