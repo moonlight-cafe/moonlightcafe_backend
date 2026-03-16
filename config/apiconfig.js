@@ -1,5 +1,4 @@
 import { Config, Methods, MainDB, RecordInfo } from "./Init.js";
-import _PaginationInfo from "./PaginationInfo.js";
 
 export var RequestBody;
 export var RequestHeaders;
@@ -7,7 +6,6 @@ export var ResponseBody = {};
 export var ResponseHeaders = {};
 export var IpAddress;
 export var URL;
-export var PaginationInfo;
 
 export async function setReqHeaderParams(req, res, next) {
         try {
@@ -54,11 +52,6 @@ export async function setReqHeaderParams(req, res, next) {
 
                         URL = req.url;
                         RequestBody = Object.assign({}, req.body);
-
-                        PaginationInfo = Object.assign(
-                                new _PaginationInfo(),
-                                req.body.paginationinfo
-                        );
 
                         if (URL.includes("/add")) {
                                 req.body.recordinfo = {
