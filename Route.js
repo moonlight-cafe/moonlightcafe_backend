@@ -40,7 +40,8 @@ const Menu = new _Menu()
 const APIAboutUs = new _AboutUs()
 
 var router = express.Router()
-router.all('*', setReqHeaderParams)
+// router.all('*', setReqHeaderParams)
+router.use(setReqHeaderParams)
 
 /****************************************************** User Auth APIs ******************************************************/
 router.get(Config.endpointv1 + '/healthcheck', Apisignup.health)
