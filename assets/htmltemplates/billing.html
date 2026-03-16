@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Moonlight Café - Customer Bill</title>
+</head>
+
+<body style="margin:0; padding:40px 0; background-color:#121212; font-family:'Segoe UI', sans-serif; color:#f0f0f0;">
+
+        <div style="
+        max-width:600px;
+        margin:auto;
+        background-color:#1e1e1e;
+        border-radius:10px;
+        padding:30px;
+        border:2px solid #47d9a8;
+        box-shadow:0 0 12px rgba(0,0,0,0.5);
+    ">
+
+                <!-- Header -->
+                <div style="text-align:center; margin-bottom:20px;">
+                        <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png"
+                                alt="Moonlight Cafe Logo" style="width:150px; margin-bottom:15px;">
+                        <div style="font-size:15px; color:#bbbbbb; margin-top:5px;">
+                                <strong>Bill Receipt</strong>
+                        </div>
+                </div>
+
+                <!-- Details -->
+                <div style="margin-top:30px;">
+                        <table style="width:100%; font-size:15px; border-collapse:collapse;">
+                                <tr>
+                                        <td style="padding:6px 0;"><strong>Order No:</strong> #ordno?</td>
+                                        <td style="padding:6px 0; text-align:right;"><strong>Date:</strong> #orddate?
+                                        </td>
+                                </tr>
+                                <tr>
+                                        <td style="padding:6px 0;"><strong>Customer:</strong> #customer?</td>
+                                        <td style="padding:6px 0; text-align:right;"><strong>Table No:</strong> #tblno?
+                                        </td>
+                                </tr>
+                                <tr>
+                                        <td style="padding:6px 0;"><strong>Service Type:</strong> #service?</td>
+                                        <td style="padding:6px 0; text-align:right;"><strong>Payment Mode:</strong>
+                                                #paymentmode?</td>
+                                </tr>
+                        </table>
+                </div>
+
+                <!-- Items -->
+                <div style="margin-top:25px;">
+                        <table style="width:100%; border-collapse:collapse; font-size:15px;">
+                                <thead>
+                                        <tr>
+                                                <th
+                                                        style="text-align:left; padding:10px; background-color:#47d9a8; color:#121212;">
+                                                        Item</th>
+                                                <th
+                                                        style="text-align:left; padding:10px; background-color:#47d9a8; color:#121212;">
+                                                        Qty</th>
+                                                <th
+                                                        style="text-align:right; padding:10px; background-color:#47d9a8; color:#121212;">
+                                                        Price</th>
+                                        </tr>
+                                </thead>
+                                <tbody>
+                                        #orderitems?
+                                </tbody>
+                        </table>
+                </div>
+
+                <!-- Summary -->
+                <div style="margin-top:30px;">
+                        <table style="width:100%; font-size:15px; border-collapse:collapse;">
+                                <tr>
+                                        <td style="padding:8px 0;"><strong>Subtotal:</strong></td>
+                                        <td style="padding:8px 0; text-align:right;">#amount?</td>
+                                </tr>
+                                <tr>
+                                        <td style="padding:8px 0;"><strong>Tip:</strong></td>
+                                        <td style="padding:8px 0; text-align:right;">#tipamount?</td>
+                                </tr>
+                                <tr>
+                                        <td style="padding:8px 0;"><strong>Tax (#taxpercent? %)</strong></td>
+                                        <td style="padding:8px 0; text-align:right;">#taxamount?</td>
+                                </tr>
+                                <tr>
+                                        <td style="padding:8px 0; font-size:18px; font-weight:bold;"><strong>Total
+                                                        Amount:</strong></td>
+                                        <td style="padding:8px 0; text-align:right; font-size:18px; font-weight:bold;">
+                                                #totalamount?</td>
+                                </tr>
+                        </table>
+                </div>
+
+                <!-- Footer -->
+                <div style="text-align:center; margin-top:40px; font-size:14px; color:#888;">
+                        Thank you for dining with us! <br />
+                        Visit again at <strong>Moonlight Café</strong>.
+                </div>
+
+        </div>
+
+</body>
+
+</html>
