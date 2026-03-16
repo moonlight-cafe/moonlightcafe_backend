@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const port = Config.port || 8080;
 
 const allowedOrigins = [
-    'https://manage-moonlightcafex.onrender.com',
+    'https://manage-moonlightcafe.onrender.com',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://192.168.1.2:3000',
