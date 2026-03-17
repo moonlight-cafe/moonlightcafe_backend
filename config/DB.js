@@ -434,13 +434,10 @@ class DB {
             body = this.createBody(tempbody, data);
 
             let transporterdata = {
-                service: "gmail",
                 host: "smtp.gmail.com",
-                port: 465,
-                secure: true,
-                tls: {
-                    ciphers: 'SSLv3'
-                },
+                port: 587,
+                secure: false,
+                requireTLS: true,
                 auth: {
                     user: Config.mailid,
                     pass: Config.mailpass
@@ -466,14 +463,6 @@ class DB {
                 requestedpersonid: requestedpersonid,
             };
             console.log("🚀 ~ DB.js:467 ~ DB ~ sendMail ~ workerData>>", workerData);
-
-            if (!Methods.checkForNullValues(inReplyTo)) {
-                workerData.inReplyTo = inReplyTo;
-            }
-
-            if (Array.isArray(references) && references.length > 0) {
-                workerData.references = references;
-            }
 
             const worker = new Worker("./workers/sendmail.js", {
                 workerData
