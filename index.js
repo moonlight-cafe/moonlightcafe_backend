@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const port = Config.port || 8080;
+const port = Config.port;
 
 const allowedOrigins = [
     'https://manage-moonlightcafe.pages.dev',
