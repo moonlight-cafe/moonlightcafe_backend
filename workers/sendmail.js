@@ -21,7 +21,7 @@ async function sendMail(workerData) {
         const sendMailResp = await transporter.sendMail(mailOptions)
         return { status: 'pass', message_id: sendMailResp.messageId }
     } catch (err) {
-        console.log(err)
+        console.log("🚀 ~ sendmail.js:1 ~ sendMail ~ err>>", err);
         return { status: 'fail', err: err }
     }
 }
