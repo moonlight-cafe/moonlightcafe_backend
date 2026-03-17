@@ -412,28 +412,8 @@ class DB {
         }
     }
 
-    async sendMail(
-        emailfrom,
-        emailto,
-        templateid,
-        subject = '',
-        data = {},
-        files = '',
-        bcc = '',
-        cc = '',
-        sendername = '',
-        emailhostid = '',
-        attachments = [],
-        refdata = {},
-        tonames = [],
-        igonreActiveAccount = false,
-        inReplyTo = "",
-        references = [],
-        insertApprovalEmail = false,
-        insertApprovalEmailData = {}
-    ) {
+    async sendMail(emailfrom, emailto, templateid, subject = '', data = {}, files = '', bcc = '', cc = '', sendername = '', emailhostid = '', attachments = [], refdata = {}, tonames = [], igonreActiveAccount = false, inReplyTo = "", references = [], insertApprovalEmail = false, insertApprovalEmailData = {}) {
         try {
-            const ObjectId = _mongoose.Types.ObjectId;
             let requestedpersonid = "";
 
             if (data?.requestedpersonid) {
@@ -448,20 +428,10 @@ class DB {
             let template;
             let body;
 
-            if (Methods.ValidateObjectId(templateid)) {
-                const emailtemplatePipeline = [{ $match: { _id: new ObjectId(templateid) } }];
-                const emailtemplateResp = await this.getmenual('tblemailtemplatemaster', new _EmailTemplate(), emailtemplatePipeline);
-                template = emailtemplateResp.ResultData[0];
-                body = this.createBody(template.body, data);
-                bcc = template.bccemails?.toString() || '';
-                cc = template.ccemails?.toString() || '';
-            } else {
-                template = templateid;
-                let tempbody = await Methods.getFileContent(template.body, 'utf8');
-                body = this.createBody(tempbody, data);
-            }
+            template = templateid;
+            let tempbody = await Methods.getFileContent(template.body, 'utf8');
+            body = this.createBody(tempbody, data);
 
-            // SMTP setup
             let transporterdata = {
                 service: "gmail",
                 host: "...",
@@ -483,7 +453,7 @@ class DB {
             });
 
             const workerData = {
-                mailemailfrom: emailfrom /* || (emailSmtpResp.ResultData?.[0]?.email || "local@gmail.com") */,
+                mailemailfrom: emailfrom,
                 to: emails,
                 mailsubject: subject || template.subject,
                 text: "",
@@ -511,7 +481,7 @@ class DB {
                 if (result?.status === "pass") {
                     if (Object.keys(refdata).length > 0) {
                         let emaildata = {
-                            from: emailfrom || (emailSmtpResp.ResultData?.[0]?.email || "local@local.com"),
+                            from: emailfrom,
                             datetime: Methods.getdatetimeisostr(),
                             to: emails,
                             subject: subject || template.subject,
@@ -539,7 +509,7 @@ class DB {
                     // Store failed mail log
                     let newdata = {
                         data: {
-                            emailfrom: emailfrom || (emailSmtpResp.ResultData?.[0]?.email || "local@local.com"),
+                            emailfrom: emailfrom,
                             emailto: emailto,
                             templateid: templateid,
                             subject: subject || template.subject,
