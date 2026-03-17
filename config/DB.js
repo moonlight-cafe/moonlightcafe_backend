@@ -434,7 +434,7 @@ class DB {
 
             let transporterdata = {
                 service: "gmail",
-                host: "...",
+                host: "smtp.gmail.com",
                 port: 465,
                 secure: true,
                 tls: {
