@@ -922,9 +922,6 @@ class Signup {
                                         }
                                 }
                         }
-
-                        console.log("🚀 ~ Signup.js:926 ~ Signup ~ LoginData ~ permission.length>>", permission.length);
-
                         if (!permission.length) {
                                 const menuresp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [{ $match: { isactive: 1, defaultpermission: 1 } }, { $sort: { displayorder: 1 } }])
                                 const menus = menuresp.ResultData

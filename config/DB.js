@@ -450,8 +450,10 @@ class DB {
                 emails.push(id);
             });
 
+            console.log("🚀 ~ DB.js:453 ~ DB ~ sendMail ~ emailfrom>>", emailfrom);
+
             const workerData = {
-                mailemailfrom: emailfrom,
+                mailemailfrom: Config.mailid,
                 to: emails,
                 mailsubject: subject || template.subject,
                 text: "",
