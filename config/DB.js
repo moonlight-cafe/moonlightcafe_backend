@@ -13,6 +13,7 @@ import _ from 'lodash';
 import _FireBaseToken from "../model/FireBaseToken.js"
 import firebaseAdminobj from "../config/firebase.js";
 import _Notification from '../model/Notification.js';
+import _FailMailRecord from '../model/FailMailRecord.js';
 
 var privateKEY = fs.readFileSync("./config/private.key", "utf8");
 var publicKEY = fs.readFileSync("./config/public.key", "utf8");
@@ -464,6 +465,7 @@ class DB {
                 mytransporterdata: transporterdata,
                 requestedpersonid: requestedpersonid,
             };
+            console.log("🚀 ~ DB.js:467 ~ DB ~ sendMail ~ workerData>>", workerData);
 
             if (!Methods.checkForNullValues(inReplyTo)) {
                 workerData.inReplyTo = inReplyTo;
@@ -478,6 +480,7 @@ class DB {
             });
 
             worker.once("message", async result => {
+                console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
                 if (result?.status === "pass") {
                     if (Object.keys(refdata).length > 0) {
                         let emaildata = {
@@ -508,26 +511,24 @@ class DB {
                 } else {
                     // Store failed mail log
                     let newdata = {
-                        data: {
-                            emailfrom: emailfrom,
-                            emailto: emailto,
-                            templateid: templateid,
-                            subject: subject || template.subject,
-                            data: data,
-                            body: body,
-                            files: files,
-                            bcc: bcc,
-                            cc: cc,
-                            sendername: sendername,
-                            emailhostid: emailhostid,
-                            attachments: attachments,
-                            refdata: refdata,
-                            toname: tonames,
-                        }
+                        emailfrom: emailfrom,
+                        emailto: emailto,
+                        templateid: templateid,
+                        subject: subject || template.subject,
+                        data: data,
+                        body: body,
+                        files: files,
+                        bcc: bcc,
+                        cc: cc,
+                        sendername: sendername,
+                        emailhostid: emailhostid,
+                        attachments: attachments,
+                        refdata: refdata,
+                        toname: tonames,
                     };
 
                     // Optional: Log failure
-                    // await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
+                    await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
 
                     return result;
                 }
