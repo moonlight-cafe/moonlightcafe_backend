@@ -443,14 +443,13 @@ class DB {
                     pass: Config.mailpass
                 }
             };
+            console.log("🚀 ~ DB.js:446 ~ DB ~ sendMail ~ transporterdata>>", transporterdata);
 
             const emails = [];
 
             emailto.forEach(id => {
                 emails.push(id);
             });
-
-            console.log("🚀 ~ DB.js:453 ~ DB ~ sendMail ~ emailfrom>>", emailfrom);
 
             const workerData = {
                 mailemailfrom: Config.mailid,
@@ -464,11 +463,9 @@ class DB {
                 mytransporterdata: transporterdata,
                 requestedpersonid: requestedpersonid,
             };
-            console.log("🚀 ~ DB.js:467 ~ DB ~ sendMail ~ workerData>>", workerData);
 
-            const worker = new Worker("./workers/sendmail.js", {
-                workerData
-            });
+            const worker = new Worker("./workers/sendmail.js", { workerData });
+            console.log("🚀 ~ DB.js:468 ~ DB ~ sendMail ~ worker>>", worker);
 
             worker.once("message", async result => {
                 console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
