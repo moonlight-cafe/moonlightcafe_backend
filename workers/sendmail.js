@@ -4,8 +4,9 @@ import { Methods } from '../config/Init.js';
 
 async function sendMail(workerData) {
     try {
+        console.log("🚀 ~ sendmail.js:5 ~ sendMail ~ workerData>>");
         var transporter = nodemailer.createTransport(workerData.mytransporterdata);
-        var message_id = ""
+        console.log("🚀 ~ sendmail.js:8 ~ sendMail ~ transporter>>", transporter);
         const mailOptions = {
             from: workerData.mailemailfrom,
             to: workerData.to,
@@ -16,10 +17,11 @@ async function sendMail(workerData) {
             bcc: workerData.mailbcc,
             cc: workerData.mailcc,
         }
+        console.log("🚀 ~ sendmail.js:20 ~ sendMail ~ mailOptions>>", mailOptions);
 
-        if (!Methods.checkForNullValues(workerData?.inReplyTo)) mailOptions.inReplyTo = workerData.inReplyTo
-        if (Array.isArray(workerData?.references) && workerData?.references.length > 0) mailOptions.references = workerData?.references;
         const sendMailResp = await transporter.sendMail(mailOptions)
+        console.log("🚀 ~ sendmail.js:26 ~ sendMail ~ sendMailResp.messageId>>", sendMailResp.messageId);
+
         return { status: 'pass', message_id: sendMailResp.messageId }
     } catch (err) {
         console.log(err)
