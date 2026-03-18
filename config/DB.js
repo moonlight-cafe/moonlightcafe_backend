@@ -443,6 +443,7 @@ class DB {
                     pass: Config.mailpass
                 }
             };
+            console.log("🚀 ~ DB.js:446 ~ DB ~ sendMail ~ transporterdata>>", transporterdata);
 
             const emails = [];
 
@@ -466,9 +467,7 @@ class DB {
             };
             console.log("🚀 ~ DB.js:467 ~ DB ~ sendMail ~ workerData>>", workerData);
 
-            const worker = new Worker("./workers/sendmail.js", {
-                workerData
-            });
+            const worker = new Worker("./workers/sendmail.js", { workerData });
 
             worker.once("message", async result => {
                 console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
