@@ -6,6 +6,9 @@ async function sendMail(workerData) {
         console.log("🚀 ~ sendmail.js:5 ~ sendMail ~ workerData>>", workerData.mytransporterdata);
         var transporter = nodemailer.createTransport(workerData.mytransporterdata);
         console.log("🚀 ~ sendmail.js:8 ~ sendMail ~ transporter>>", transporter);
+        await transporter.verify()
+            .then(() => console.log("SMTP Ready"))
+            .catch(err => console.error("SMTP Error:", err));
         const mailOptions = {
             from: workerData.mailemailfrom,
             to: workerData.to,

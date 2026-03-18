@@ -434,11 +434,9 @@ class DB {
             body = this.createBody(tempbody, data);
 
             let transporterdata = {
-                // host: "smtp.gmail.com",
-                service: "gmail",
-                port: 587,
-                secure: false,
-                requireTLS: true,
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
                 auth: {
                     user: Config.mailid,
                     pass: Config.mailpass
