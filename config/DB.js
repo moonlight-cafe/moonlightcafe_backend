@@ -7,7 +7,7 @@ import _Logdata from "../model/Logdata.js";
 import _Tokenexpiry from "../model/Authentication/Tokenexpiry.js";
 import _Employees from "../model/Employees.js";
 import _CustomerDetails from "../model/CustomerDetails/CustomerDetails.js";
-import nodemailer from "nodemailer"
+import { Worker } from "worker_threads"
 import fs from "fs";
 import _ from 'lodash';
 import _FireBaseToken from "../model/FireBaseToken.js"
@@ -443,7 +443,6 @@ class DB {
                     pass: Config.mailpass
                 }
             };
-            console.log("🚀 ~ DB.js:446 ~ DB ~ sendMail ~ transporterdata>>", transporterdata);
 
             const emails = [];
 
@@ -453,54 +452,90 @@ class DB {
 
             console.log("🚀 ~ DB.js:453 ~ DB ~ sendMail ~ emailfrom>>", emailfrom);
 
+            const workerData = {
+                mailemailfrom: Config.mailid,
+                to: emails,
+                mailsubject: subject || template.subject,
+                text: "",
+                html: body,
+                mailattachments: attachments,
+                mailbcc: bcc,
+                mailcc: cc,
+                mytransporterdata: transporterdata,
+                requestedpersonid: requestedpersonid,
+            };
+            console.log("🚀 ~ DB.js:467 ~ DB ~ sendMail ~ workerData>>", workerData);
 
+            const worker = new Worker("./workers/sendmail.js", {
+                workerData
+            });
 
-            // Send mail directly (no worker thread — more reliable on all hosting environments)
-            try {
-                const transporter = nodemailer.createTransport(transporterdata);
-                const mailOptions = {
-                    from: Config.mailid,
-                    to: emails,
-                    subject: subject || template.subject,
-                    text: "",
-                    html: body,
-                    attachments: attachments,
-                    bcc: bcc,
-                    cc: cc,
-                };
+            worker.once("message", async result => {
+                console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
+                if (result?.status === "pass") {
+                    if (Object.keys(refdata).length > 0) {
+                        let emaildata = {
+                            from: emailfrom,
+                            datetime: Methods.getdatetimeisostr(),
+                            to: emails,
+                            subject: subject || template.subject,
+                            body: body,
+                            bcc: bcc,
+                            cc: cc,
+                            host: transporterdata.host,
+                            port: transporterdata.port,
+                            type: refdata.type,
+                            tonames: tonames,
+                            recordinfo: refdata.recordinfo
+                        };
 
-                if (inReplyTo) mailOptions.inReplyTo = inReplyTo;
-                if (Array.isArray(references) && references.length > 0) mailOptions.references = references;
+                        delete refdata.recordinfo;
 
-                const sendMailResp = await transporter.sendMail(mailOptions);
-                console.log("🚀 ~ DB.js ~ sendMail ~ SUCCESS ~ message_id>>", sendMailResp.messageId);
+                        let adddata = { ...refdata, ...data };
+                        emaildata.refdata = adddata;
+                    }
 
-                if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
-                    insertApprovalEmailData.message_id = sendMailResp.messageId;
-                    await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
+                    if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
+                        insertApprovalEmailData.message_id = result.message_id;
+                        await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
+                    }
+                } else {
+                    // Store failed mail log
+                    let newdata = {
+                        emailfrom: emailfrom,
+                        emailto: emailto,
+                        templateid: templateid,
+                        subject: subject || template.subject,
+                        data: data,
+                        body: body,
+                        files: files,
+                        bcc: bcc,
+                        cc: cc,
+                        sendername: sendername,
+                        emailhostid: emailhostid,
+                        attachments: attachments,
+                        refdata: refdata,
+                        toname: tonames,
+                    };
+
+                    // Optional: Log failure
+                    await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
+
+                    return result;
                 }
-            } catch (mailErr) {
-                console.error("🚀 ~ DB.js ~ sendMail ~ FAILED >>", mailErr.message);
 
-                // Log failed mail to DB
-                let newdata = {
-                    emailfrom: emailfrom,
-                    emailto: emailto,
-                    templateid: templateid,
-                    subject: subject || template.subject,
-                    data: data,
-                    body: body,
-                    files: files,
-                    bcc: bcc,
-                    cc: cc,
-                    sendername: sendername,
-                    emailhostid: emailhostid,
-                    attachments: attachments,
-                    refdata: refdata,
-                    toname: tonames,
-                };
-                await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
-            }
+                worker.terminate();
+            });
+
+            worker.on("error", error => {
+                console.error("Worker Error:", error);
+                worker.terminate();
+            });
+
+            worker.on("exit", exitCode => {
+                console.log("Worker exited with code:", exitCode);
+                worker.terminate();
+            });
 
         } catch (e) {
             console.error("sendMail error:", e);
