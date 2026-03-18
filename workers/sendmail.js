@@ -5,6 +5,7 @@ import { Methods } from '../config/Init.js';
 async function sendMail(workerData) {
     try {
         var transporter = nodemailer.createTransport(workerData.mytransporterdata);
+        var message_id = ""
         const mailOptions = {
             from: workerData.mailemailfrom,
             to: workerData.to,
@@ -21,7 +22,7 @@ async function sendMail(workerData) {
         const sendMailResp = await transporter.sendMail(mailOptions)
         return { status: 'pass', message_id: sendMailResp.messageId }
     } catch (err) {
-        console.log("🚀 ~ sendmail.js:1 ~ sendMail ~ err>>", err);
+        console.log(err)
         return { status: 'fail', err: err }
     }
 }
