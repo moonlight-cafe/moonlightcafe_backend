@@ -1,10 +1,9 @@
 import { parentPort, workerData } from 'worker_threads'
 import nodemailer from 'nodemailer'
-import { Methods } from '../config/Init.js';
 
 async function sendMail(workerData) {
     try {
-        console.log("🚀 ~ sendmail.js:5 ~ sendMail ~ workerData>>");
+        console.log("🚀 ~ sendmail.js:5 ~ sendMail ~ workerData>>", workerData.mytransporterdata);
         var transporter = nodemailer.createTransport(workerData.mytransporterdata);
         console.log("🚀 ~ sendmail.js:8 ~ sendMail ~ transporter>>", transporter);
         const mailOptions = {
