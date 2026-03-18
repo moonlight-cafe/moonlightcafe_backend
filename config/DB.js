@@ -9,6 +9,10 @@ import _Employees from "../model/Employees.js";
 import _CustomerDetails from "../model/CustomerDetails/CustomerDetails.js";
 import { Worker } from "worker_threads"
 import fs from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import _ from 'lodash';
 import _FireBaseToken from "../model/FireBaseToken.js"
 import firebaseAdminobj from "../config/firebase.js";
@@ -467,7 +471,8 @@ class DB {
             };
             console.log("🚀 ~ DB.js:467 ~ DB ~ sendMail ~ workerData>>", workerData);
 
-            const worker = new Worker("./workers/sendmail.js", { workerData });
+            const workerPath = path.resolve(__dirname, "../workers/sendmail.js");
+            const worker = new Worker(workerPath, { workerData });
 
             worker.once("message", async result => {
                 console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
@@ -533,7 +538,6 @@ class DB {
 
             worker.on("exit", exitCode => {
                 console.log("Worker exited with code:", exitCode);
-                worker.terminate();
             });
 
         } catch (e) {
