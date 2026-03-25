@@ -2,106 +2,250 @@
 <html lang="en">
 
 <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Moonlight Café - Customer Bill</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Moonlight Cafe - Bill Receipt</title>
 </head>
 
-<body style="margin:0; padding:40px 0; background-color:#121212; font-family:'Segoe UI', sans-serif; color:#f0f0f0;">
+<body style="margin:0; padding:20px; background:#1e1e1e; font-family:Arial, sans-serif;">
 
-        <div style="
-        max-width:600px;
-        margin:auto;
-        background-color:#1e1e1e;
-        border-radius:10px;
-        padding:30px;
-        border:2px solid #47d9a8;
-        box-shadow:0 0 12px rgba(0,0,0,0.5);
-    ">
+        <table align="center" width="100%" cellpadding="0" cellspacing="0"
+                style="max-width:80%; background:#2a2a2a; border-radius:20px; overflow:hidden; border:1px solid #47d9a8; box-shadow:0 0 20px rgba(71,217,168,0.25);">
 
-                <!-- Header -->
-                <div style="text-align:center; margin-bottom:20px;">
-                        <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png"
-                                alt="Moonlight Cafe Logo" style="width:150px; margin-bottom:15px;">
-                        <div style="font-size:15px; color:#bbbbbb; margin-top:5px;">
-                                <strong>Bill Receipt</strong>
-                        </div>
-                </div>
+                <!-- HEADER -->
+                <tr>
+                        <td style="background:#111; text-align:center; padding:20px; border-bottom:2px solid #47d9a8;">
+                                <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png"
+                                        width="110" style="display:block; margin:auto;">
+                        </td>
+                </tr>
 
-                <!-- Details -->
-                <div style="margin-top:30px;">
-                        <table style="width:100%; font-size:15px; border-collapse:collapse;">
-                                <tr>
-                                        <td style="padding:6px 0;"><strong>Order No:</strong> #ordno?</td>
-                                        <td style="padding:6px 0; text-align:right;"><strong>Date:</strong> #orddate?
-                                        </td>
-                                </tr>
-                                <tr>
-                                        <td style="padding:6px 0;"><strong>Customer:</strong> #customer?</td>
-                                        <td style="padding:6px 0; text-align:right;"><strong>Table No:</strong> #tblno?
-                                        </td>
-                                </tr>
-                                <tr>
-                                        <td style="padding:6px 0;"><strong>Service Type:</strong> #service?</td>
-                                        <td style="padding:6px 0; text-align:right;"><strong>Payment Mode:</strong>
-                                                #paymentmode?</td>
-                                </tr>
-                        </table>
-                </div>
+                <!-- TITLE -->
+                <tr>
+                        <td style="text-align:center; padding:20px 20px 10px;">
+                                <h2 style="margin:0; color:#47d9a8;">Bill Receipt</h2>
+                        </td>
+                </tr>
 
-                <!-- Items -->
-                <div style="margin-top:25px;">
-                        <table style="width:100%; border-collapse:collapse; font-size:15px;">
-                                <thead>
+                <!-- ORDER DETAILS -->
+                <tr>
+                        <td style="padding:20px;">
+
+                                <!-- WRAPPER -->
+                                <table width="100%" cellpadding="0" cellspacing="0"
+                                        style="border-radius:10px; overflow:hidden; border:1px solid #47d9a8;">
+
                                         <tr>
-                                                <th
-                                                        style="text-align:left; padding:10px; background-color:#47d9a8; color:#121212;">
-                                                        Item</th>
-                                                <th
-                                                        style="text-align:left; padding:10px; background-color:#47d9a8; color:#121212;">
-                                                        Qty</th>
-                                                <th
-                                                        style="text-align:right; padding:10px; background-color:#47d9a8; color:#121212;">
-                                                        Price</th>
+                                                <td>
+
+                                                        <table width="100%" cellpadding="10" cellspacing="0"
+                                                                style="background:#1f1f1f; font-size:14px; color:#cccccc; border-collapse:separate; border-spacing:0;">
+
+                                                                <tr>
+                                                                        <td colspan="2" align="center"
+                                                                                style="padding:10px 0; border-bottom:1px solid #333;">
+
+                                                                                <h3
+                                                                                        style="margin:0; color:#47d9a8; font-size:16px; letter-spacing:1px;">
+                                                                                        ORDER DETAILS
+                                                                                </h3>
+
+                                                                        </td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">Order
+                                                                                No</td>
+                                                                        <td align="right"
+                                                                                style="color:#47d9a8; border-bottom:1px solid #333;">
+                                                                                <strong>#ordno?</strong>
+                                                                        </td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">Date
+                                                                        </td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #orddate?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">
+                                                                                Customer</td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #customer?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">Table
+                                                                                No</td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #tblno?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">
+                                                                                Service Type</td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #service?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td>Payment Mode</td>
+                                                                        <td align="right">#paymentmode?</td>
+                                                                </tr>
+
+                                                        </table>
+
+                                                </td>
                                         </tr>
-                                </thead>
-                                <tbody>
-                                        #orderitems?
-                                </tbody>
-                        </table>
-                </div>
+                                </table>
 
-                <!-- Summary -->
-                <div style="margin-top:30px;">
-                        <table style="width:100%; font-size:15px; border-collapse:collapse;">
-                                <tr>
-                                        <td style="padding:8px 0;"><strong>Subtotal:</strong></td>
-                                        <td style="padding:8px 0; text-align:right;">#amount?</td>
-                                </tr>
-                                <tr>
-                                        <td style="padding:8px 0;"><strong>Tip:</strong></td>
-                                        <td style="padding:8px 0; text-align:right;">#tipamount?</td>
-                                </tr>
-                                <tr>
-                                        <td style="padding:8px 0;"><strong>Tax (#taxpercent? %)</strong></td>
-                                        <td style="padding:8px 0; text-align:right;">#taxamount?</td>
-                                </tr>
-                                <tr>
-                                        <td style="padding:8px 0; font-size:18px; font-weight:bold;"><strong>Total
-                                                        Amount:</strong></td>
-                                        <td style="padding:8px 0; text-align:right; font-size:18px; font-weight:bold;">
-                                                #totalamount?</td>
-                                </tr>
-                        </table>
-                </div>
+                        </td>
+                </tr>
 
-                <!-- Footer -->
-                <div style="text-align:center; margin-top:40px; font-size:14px; color:#888;">
-                        Thank you for dining with us! <br />
-                        Visit again at <strong>Moonlight Café</strong>.
-                </div>
+                <!-- ITEMS TABLE -->
+                <tr>
+                        <td style="padding:0 20px;">
 
-        </div>
+                                <!-- WRAPPER -->
+                                <table width="100%" cellpadding="0" cellspacing="0"
+                                        style="margin-top:10px; border-radius:10px; overflow:hidden; border:1px solid #47d9a8;">
+
+                                        <tr>
+                                                <td>
+
+                                                        <!-- INNER TABLE -->
+                                                        <table width="100%" cellpadding="10" cellspacing="0"
+                                                                style="font-size:14px; border-collapse:separate; border-spacing:0; table-layout:fixed;">
+
+                                                                <thead>
+                                                                        <tr>
+                                                                                <th width="60%"
+                                                                                        style="text-align:left; background:#47d9a8; color:#111;">
+                                                                                        Item
+                                                                                </th>
+
+                                                                                <th width="15%"
+                                                                                        style="text-align:center; background:#47d9a8; color:#111;">
+                                                                                        Qty
+                                                                                </th>
+
+                                                                                <th width="25%"
+                                                                                        style="text-align:right; background:#47d9a8; color:#111;">
+                                                                                        Price
+                                                                                </th>
+                                                                        </tr>
+                                                                </thead>
+
+                                                                <tbody style="background:#1f1f1f; color:#cccccc;">
+                                                                        #orderitems?
+                                                                </tbody>
+
+                                                        </table>
+
+                                                </td>
+                                        </tr>
+
+                                </table>
+
+                        </td>
+                </tr>
+
+                <!-- SUMMARY -->
+                <tr>
+                        <td style="padding:20px;">
+
+                                <!-- WRAPPER -->
+                                <table width="100%" cellpadding="0" cellspacing="0"
+                                        style="border-radius:10px; overflow:hidden; border:1px solid #47d9a8;">
+
+                                        <tr>
+                                                <td>
+
+                                                        <table width="100%" cellpadding="10" cellspacing="0"
+                                                                style="font-size:14px; color:#cccccc; border-collapse:separate; border-spacing:0; background:#1f1f1f;">
+
+                                                                <tr>
+                                                                        <td colspan="2" align="center"
+                                                                                style="padding:10px 0; border-bottom:1px solid #333;">
+
+                                                                                <h3
+                                                                                        style="margin:0; color:#47d9a8; font-size:16px; letter-spacing:1px;">
+                                                                                        PAYMENT SUMMARY
+                                                                                </h3>
+
+                                                                        </td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">
+                                                                                Subtotal</td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #amount?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">Tip
+                                                                        </td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #tipamount?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td style="border-bottom:1px solid #333;">Tax
+                                                                                (#taxpercent?%)</td>
+                                                                        <td align="right"
+                                                                                style="border-bottom:1px solid #333;">
+                                                                                #taxamount?</td>
+                                                                </tr>
+
+                                                                <tr>
+                                                                        <td
+                                                                                style="font-size:16px; font-weight:bold; color:#ffffff;">
+                                                                                Total Amount
+                                                                        </td>
+                                                                        <td align="right"
+                                                                                style="font-size:18px; font-weight:bold; color:#47d9a8;">
+                                                                                #totalamount?
+                                                                        </td>
+                                                                </tr>
+
+                                                        </table>
+
+                                                </td>
+                                        </tr>
+                                </table>
+
+                        </td>
+                </tr>
+
+                <!-- FOOTER MESSAGE -->
+                <tr>
+                        <td style="text-align:center; padding:20px; font-size:14px; color:#bbbbbb;">
+                                Thank you for dining with us!<br>
+                                We look forward to serving you again at <a href="#appurl?"
+                                        style="color:#47d9a8; text-decoration:none; font-weight:600; letter-spacing:0.5px;"><strong
+                                                style="color:#47d9a8;">Moonlight
+                                                Cafe</strong></a>.
+                        </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                        <td
+                                style="background:#111; text-align:center; padding:15px; font-size:12px; border-top:2px solid #47d9a8; color:#47d9a8;">
+                                © 2026 Moonlight Cafe. All rights reserved.
+                        </td>
+                </tr>
+
+        </table>
 
 </body>
 

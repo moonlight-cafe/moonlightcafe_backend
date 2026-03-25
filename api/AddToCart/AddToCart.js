@@ -85,7 +85,7 @@ class AddToCart {
                                                 const price = parseFloat(item.price || 0)
                                                 const qty = parseInt(item.quantity || 1)
 
-                                                subtotal += price * qty
+                                                subtotal += price
 
                                                 newData.push({
                                                         foodid: item.foodid,
@@ -359,7 +359,8 @@ class AddToCart {
                                 taxamount: `₹${verifypayment.data.taxamount}`,
                                 totalamount: `₹${verifypayment.data.totalamount}`,
                                 orderitems: orderItemsHTML,
-                                data: verifypayment.data.data
+                                data: verifypayment.data.data,
+                                appurl: Config.moonlightcafe
                         };
 
                         await MainDB.sendMail('', [customerdetails.data.email], template, '', senddata);

@@ -211,6 +211,7 @@ class Signup {
                         let template = Config.emailtemplates['welcomeletter'];
                         let senddata = {
                                 name: name,
+                                appurl: Config.moonlightcafe
                         };
                         await MainDB.sendMail('', [email], template, '', senddata);
 

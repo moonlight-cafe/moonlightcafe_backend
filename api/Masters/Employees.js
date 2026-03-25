@@ -55,7 +55,8 @@ export default class Employees {
                         const sendata = {
                                 name: req.body.name,
                                 employeeid: employeeid,
-                                role: req.body.role
+                                role: req.body.role,
+                                loginurl: Config.manage_moonlightcafe
                         }
                         req.body.password = Methods.encryptPassword(password, create_at)
                         req.body.create_at = create_at
