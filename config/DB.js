@@ -7,7 +7,8 @@ import _Logdata from "../model/Logdata.js";
 import _Tokenexpiry from "../model/Authentication/Tokenexpiry.js";
 import _Employees from "../model/Employees.js";
 import _CustomerDetails from "../model/CustomerDetails/CustomerDetails.js";
-import { Resend } from "resend"
+import { google } from "googleapis";
+import nodemailer from "nodemailer";
 import fs from "fs";
 import _ from 'lodash';
 import _FireBaseToken from "../model/FireBaseToken.js"
@@ -438,13 +439,20 @@ class DB {
 
             console.log("🚀 ~ DB.js ~ sendMail ~ to>>", emails, "subject>>", subject || template.subject);
 
-            // Send via Resend HTTP API (works on Render - no SMTP port restrictions)
+            // Send via Gmail API (HTTPS) to bypass SMTP port restrictions
             try {
-                const resend = new Resend(Config.resendapikey);
+                const oAuth2Client = new google.auth.OAuth2(
+                    Config.gmail_client_id,
+                    Config.gmail_client_secret,
+                    "https://developers.google.com/oauthplayground"
+                );
+                
+                oAuth2Client.setCredentials({ refresh_token: Config.gmail_refresh_token });
+                const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
 
-                const payload = {
-                    from: Config.mailid,
-                    reply_to: inReplyTo || Config.mainmailid,
+                const mailOptions = {
+                    from: Config.mainmailid,
+                    replyTo: inReplyTo || Config.mainmailid,
                     to: emails,
                     subject: subject || template.subject,
                     html: body,
@@ -453,16 +461,20 @@ class DB {
                     ...(attachments?.length && { attachments }),
                 };
 
-                const { data: resData, error } = await resend.emails.send(payload);
+                // Compile email raw using nodemailer
+                const transporter = nodemailer.createTransport({ streamTransport: true, newline: 'windows', buffer: true });
+                const info = await transporter.sendMail(mailOptions);
+                const encodedMessage = info.message.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-                if (error) {
-                    throw new Error(JSON.stringify(error));
-                }
+                const res = await gmail.users.messages.send({
+                    userId: 'me',
+                    requestBody: { raw: encodedMessage }
+                });
 
-                console.log("🚀 ~ DB.js ~ sendMail ~ SUCCESS ~ id>>", resData?.id);
+                console.log("🚀 ~ DB.js ~ sendMail ~ SUCCESS ~ id>>", res.data.id);
 
                 if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
-                    insertApprovalEmailData.message_id = resData?.id;
+                    insertApprovalEmailData.message_id = res.data.id;
                     await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
                 }
             } catch (mailErr) {
