@@ -7,7 +7,7 @@ import _Logdata from "../model/Logdata.js";
 import _Tokenexpiry from "../model/Authentication/Tokenexpiry.js";
 import _Employees from "../model/Employees.js";
 import _CustomerDetails from "../model/CustomerDetails/CustomerDetails.js";
-import { Worker } from "worker_threads"
+import { Resend } from "resend"
 import fs from "fs";
 import _ from 'lodash';
 import _FireBaseToken from "../model/FireBaseToken.js"
@@ -433,105 +433,59 @@ class DB {
             let tempbody = await Methods.getFileContent(template.body, 'utf8');
             body = this.createBody(tempbody, data);
 
-            let transporterdata = {
-                host: "smtp.gmail.com",
-                port: 465,
-                secure: true,
-                auth: {
-                    user: Config.mailid,
-                    pass: Config.mailpass
-                }
-            };
-            console.log("🚀 ~ DB.js:446 ~ DB ~ sendMail ~ transporterdata>>", transporterdata);
-
             const emails = [];
+            emailto.forEach(id => emails.push(id));
 
-            emailto.forEach(id => {
-                emails.push(id);
-            });
+            console.log("🚀 ~ DB.js ~ sendMail ~ to>>", emails, "subject>>", subject || template.subject);
 
-            const workerData = {
-                mailemailfrom: Config.mailid,
-                to: emails,
-                mailsubject: subject || template.subject,
-                text: "",
-                html: body,
-                mailattachments: attachments,
-                mailbcc: bcc,
-                mailcc: cc,
-                mytransporterdata: transporterdata,
-                requestedpersonid: requestedpersonid,
-            };
+            // Send via Resend HTTP API (works on Render - no SMTP port restrictions)
+            try {
+                const resend = new Resend(Config.resendapikey);
 
-            const worker = new Worker("./workers/sendmail.js", { workerData });
-            console.log("🚀 ~ DB.js:468 ~ DB ~ sendMail ~ worker>>", worker);
+                const payload = {
+                    from: Config.mailid,
+                    reply_to: inReplyTo || Config.mainmailid,
+                    to: emails,
+                    subject: subject || template.subject,
+                    html: body,
+                    ...(bcc && { bcc }),
+                    ...(cc && { cc }),
+                    ...(attachments?.length && { attachments }),
+                };
 
-            worker.once("message", async result => {
-                console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
-                if (result?.status === "pass") {
-                    if (Object.keys(refdata).length > 0) {
-                        let emaildata = {
-                            from: emailfrom,
-                            datetime: Methods.getdatetimeisostr(),
-                            to: emails,
-                            subject: subject || template.subject,
-                            body: body,
-                            bcc: bcc,
-                            cc: cc,
-                            host: transporterdata.host,
-                            port: transporterdata.port,
-                            type: refdata.type,
-                            tonames: tonames,
-                            recordinfo: refdata.recordinfo
-                        };
+                const { data: resData, error } = await resend.emails.send(payload);
 
-                        delete refdata.recordinfo;
-
-                        let adddata = { ...refdata, ...data };
-                        emaildata.refdata = adddata;
-                    }
-
-                    if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
-                        insertApprovalEmailData.message_id = result.message_id;
-                        await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
-                    }
-                } else {
-                    // Store failed mail log
-                    let newdata = {
-                        emailfrom: emailfrom,
-                        emailto: emailto,
-                        templateid: templateid,
-                        subject: subject || template.subject,
-                        data: data,
-                        body: body,
-                        files: files,
-                        bcc: bcc,
-                        cc: cc,
-                        sendername: sendername,
-                        emailhostid: emailhostid,
-                        attachments: attachments,
-                        refdata: refdata,
-                        toname: tonames,
-                    };
-
-                    // Optional: Log failure
-                    await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
-
-                    return result;
+                if (error) {
+                    throw new Error(JSON.stringify(error));
                 }
 
-                worker.terminate();
-            });
+                console.log("🚀 ~ DB.js ~ sendMail ~ SUCCESS ~ id>>", resData?.id);
 
-            worker.on("error", error => {
-                console.error("Worker Error:", error);
-                worker.terminate();
-            });
+                if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
+                    insertApprovalEmailData.message_id = resData?.id;
+                    await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
+                }
+            } catch (mailErr) {
+                console.error("🚀 ~ DB.js ~ sendMail ~ FAILED >>", mailErr.message);
 
-            worker.on("exit", exitCode => {
-                console.log("Worker exited with code:", exitCode);
-                worker.terminate();
-            });
+                let newdata = {
+                    emailfrom: emailfrom,
+                    emailto: emailto,
+                    templateid: templateid,
+                    subject: subject || template.subject,
+                    data: data,
+                    body: body,
+                    files: files,
+                    bcc: bcc,
+                    cc: cc,
+                    sendername: sendername,
+                    emailhostid: emailhostid,
+                    attachments: attachments,
+                    refdata: refdata,
+                    toname: tonames,
+                };
+                await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
+            }
 
         } catch (e) {
             console.error("sendMail error:", e);
@@ -666,7 +620,7 @@ class DB {
         return resp
     }
 
-    async getjwt(uid, unqkey, iss, useragent, aud, exph = "8h") {
+    async getjwt(uid, unqkey, iss, useragent, aud, exph = "10h") {
 
         try {
             if (iss && uid && unqkey && useragent) {
