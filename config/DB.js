@@ -7,7 +7,8 @@ import _Logdata from "../model/Logdata.js";
 import _Tokenexpiry from "../model/Authentication/Tokenexpiry.js";
 import _Employees from "../model/Employees.js";
 import _CustomerDetails from "../model/CustomerDetails/CustomerDetails.js";
-import { Worker } from "worker_threads"
+import { google } from "googleapis";
+import nodemailer from "nodemailer";
 import fs from "fs";
 import _ from 'lodash';
 import _FireBaseToken from "../model/FireBaseToken.js"
@@ -433,105 +434,70 @@ class DB {
             let tempbody = await Methods.getFileContent(template.body, 'utf8');
             body = this.createBody(tempbody, data);
 
-            let transporterdata = {
-                host: "smtp.gmail.com",
-                port: 465,
-                secure: true,
-                auth: {
-                    user: Config.mailid,
-                    pass: Config.mailpass
-                }
-            };
-            console.log("🚀 ~ DB.js:446 ~ DB ~ sendMail ~ transporterdata>>", transporterdata);
-
             const emails = [];
+            emailto.forEach(id => emails.push(id));
 
-            emailto.forEach(id => {
-                emails.push(id);
-            });
+            console.log("🚀 ~ DB.js ~ sendMail ~ to>>", emails, "subject>>", subject || template.subject);
 
-            const workerData = {
-                mailemailfrom: Config.mailid,
-                to: emails,
-                mailsubject: subject || template.subject,
-                text: "",
-                html: body,
-                mailattachments: attachments,
-                mailbcc: bcc,
-                mailcc: cc,
-                mytransporterdata: transporterdata,
-                requestedpersonid: requestedpersonid,
-            };
+            // Send via Gmail API (HTTPS) to bypass SMTP port restrictions
+            try {
+                const oAuth2Client = new google.auth.OAuth2(
+                    Config.gmail_client_id,
+                    Config.gmail_client_secret,
+                    "https://developers.google.com/oauthplayground"
+                );
+                
+                oAuth2Client.setCredentials({ refresh_token: Config.gmail_refresh_token });
+                const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
 
-            const worker = new Worker("./workers/sendmail.js", { workerData });
-            console.log("🚀 ~ DB.js:468 ~ DB ~ sendMail ~ worker>>", worker);
+                const mailOptions = {
+                    from: Config.mainmailid,
+                    replyTo: inReplyTo || Config.mainmailid,
+                    to: emails,
+                    subject: subject || template.subject,
+                    html: body,
+                    ...(bcc && { bcc }),
+                    ...(cc && { cc }),
+                    ...(attachments?.length && { attachments }),
+                };
 
-            worker.once("message", async result => {
-                console.log("🚀 ~ DB.js:482 ~ DB ~ sendMail ~ result>>", result);
-                if (result?.status === "pass") {
-                    if (Object.keys(refdata).length > 0) {
-                        let emaildata = {
-                            from: emailfrom,
-                            datetime: Methods.getdatetimeisostr(),
-                            to: emails,
-                            subject: subject || template.subject,
-                            body: body,
-                            bcc: bcc,
-                            cc: cc,
-                            host: transporterdata.host,
-                            port: transporterdata.port,
-                            type: refdata.type,
-                            tonames: tonames,
-                            recordinfo: refdata.recordinfo
-                        };
+                // Compile email raw using nodemailer
+                const transporter = nodemailer.createTransport({ streamTransport: true, newline: 'windows', buffer: true });
+                const info = await transporter.sendMail(mailOptions);
+                const encodedMessage = info.message.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-                        delete refdata.recordinfo;
+                const res = await gmail.users.messages.send({
+                    userId: 'me',
+                    requestBody: { raw: encodedMessage }
+                });
 
-                        let adddata = { ...refdata, ...data };
-                        emaildata.refdata = adddata;
-                    }
+                console.log("🚀 ~ DB.js ~ sendMail ~ SUCCESS ~ id>>", res.data.id);
 
-                    if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
-                        insertApprovalEmailData.message_id = result.message_id;
-                        await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
-                    }
-                } else {
-                    // Store failed mail log
-                    let newdata = {
-                        emailfrom: emailfrom,
-                        emailto: emailto,
-                        templateid: templateid,
-                        subject: subject || template.subject,
-                        data: data,
-                        body: body,
-                        files: files,
-                        bcc: bcc,
-                        cc: cc,
-                        sendername: sendername,
-                        emailhostid: emailhostid,
-                        attachments: attachments,
-                        refdata: refdata,
-                        toname: tonames,
-                    };
-
-                    // Optional: Log failure
-                    await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
-
-                    return result;
+                if (insertApprovalEmail && Object.keys(insertApprovalEmailData).length > 0) {
+                    insertApprovalEmailData.message_id = res.data.id;
+                    await this.executedata("i", new _Email(), 'tblapprovalemails', insertApprovalEmailData);
                 }
+            } catch (mailErr) {
+                console.error("🚀 ~ DB.js ~ sendMail ~ FAILED >>", mailErr.message);
 
-                worker.terminate();
-            });
-
-            worker.on("error", error => {
-                console.error("Worker Error:", error);
-                worker.terminate();
-            });
-
-            worker.on("exit", exitCode => {
-                console.log("Worker exited with code:", exitCode);
-                worker.terminate();
-            });
+                let newdata = {
+                    emailfrom: emailfrom,
+                    emailto: emailto,
+                    templateid: templateid,
+                    subject: subject || template.subject,
+                    data: data,
+                    body: body,
+                    files: files,
+                    bcc: bcc,
+                    cc: cc,
+                    sendername: sendername,
+                    emailhostid: emailhostid,
+                    attachments: attachments,
+                    refdata: refdata,
+                    toname: tonames,
+                };
+                await this.executedata('i', new _FailMailRecord(), 'tblfailmailrecord', newdata);
+            }
 
         } catch (e) {
             console.error("sendMail error:", e);
@@ -666,7 +632,7 @@ class DB {
         return resp
     }
 
-    async getjwt(uid, unqkey, iss, useragent, aud, exph = "8h") {
+    async getjwt(uid, unqkey, iss, useragent, aud, exph = "10h") {
 
         try {
             if (iss && uid && unqkey && useragent) {

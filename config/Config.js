@@ -9,8 +9,10 @@ class Config {
                 this.tokenkey = process.env.TOKEN_KEY;
                 this.GEMINI_API_URL = process.env.GEMINI_API_URL
                 this.GoogleAPIKey = process.env.GoogleAPIKey
-                this.mailid = process.env.SMTP_MAIL
-                this.mailpass = process.env.SMTP_PASS
+                this.mainmailid = process.env.MAIN_MAIL_ID
+                this.gmail_client_id = process.env.Client_ID
+                this.gmail_client_secret = process.env.Client_Secret
+                this.gmail_refresh_token = process.env.GMAIL_REFRESH_TOKEN
                 this.superadminroleid = "695d43a98bb9b230a1363f14"
 
                 this.ADMIN_USER_IDS = ["68fa58fcc1e1441ff5706b4a"]
