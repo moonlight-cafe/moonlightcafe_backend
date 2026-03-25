@@ -4,12 +4,12 @@ class Config {
         constructor() {
                 this.port = process.env.PORT;
                 this.endpointv1 = "/moonlightcafe/v1";
-                this.servermode = Servermode; // prod - Live | uat - test | dev = development
+                this.servermode = Servermode; // prod - Live | uat - test | dev = dev
                 this.dataencryption = false;
                 this.tokenkey = process.env.TOKEN_KEY;
                 this.GEMINI_API_URL = process.env.GEMINI_API_URL
                 this.GoogleAPIKey = process.env.GoogleAPIKey
-                this.mainmailid = process.env.MAIN_MAIL_ID
+                this.mainmailid = `Moonlight Cafe <${process.env.MAIN_MAIL_ID}>`
                 this.gmail_client_id = process.env.Client_ID
                 this.gmail_client_secret = process.env.Client_Secret
                 this.gmail_refresh_token = process.env.GMAIL_REFRESH_TOKEN
@@ -43,22 +43,30 @@ class Config {
                 this.firebaseclient_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40moonlightcafe-91677.iam.gserviceaccount.com"
                 this.firebaseuniverse_domain = "googleapis.com"
                 /********************** Fire Base SETUP **********************/
-                if (this.servermode == "local") {                        // Development
+                if (this.servermode == "local") {                        // Local
                         this.dataencryption = false;
                         this.logerror = true;
                         this.version = 1;
+                        this.manage_moonlightcafe = "http://192.168.1.2:3000"
+                        this.moonlightcafe = "http://192.168.1.2:3001"
                 } else if (this.servermode == "prod") {                        // live
                         this.dataencryption = true;
                         this.logerror = true;
                         this.version = 1;
+                        this.manage_moonlightcafe = "https://manage-moonlightcafe.pages.dev"
+                        this.moonlightcafe = "https://moonlightcafe.pages.dev"
                 } else if (this.servermode == "uat") {                        // test
                         this.dataencryption = false;
                         this.logerror = true;
                         this.version = 1;
+                        this.manage_moonlightcafe = "https://manage-moonlightcafe.pages.dev"
+                        this.moonlightcafe = "https://moonlightcafe.pages.dev"
                 } else if (this.servermode == "dev") {                        // test
                         this.dataencryption = false;
                         this.logerror = true;
                         this.version = 1;
+                        this.manage_moonlightcafe = "https://manage-moonlightcafe.pages.dev"
+                        this.moonlightcafe = "https://moonlightcafe.pages.dev"
                 }
 
                 this.resstatuscode = {
@@ -150,7 +158,7 @@ class Config {
                                 'type': 5
                         },
                         "employeereg": {
-                                'subject': 'Welcome to Moonlight Cafe - Employee Registration Complete',
+                                'subject': 'Welcome to Moonlight Cafe – Your Employee Account Details',
                                 'body': "/assets/htmltemplates/employeereg.html",
                                 'type': 6
                         },

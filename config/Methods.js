@@ -253,132 +253,233 @@ class Methods {
                         const html = `
                                 <!DOCTYPE html>
                                 <html>
-                                <head>
-                                <meta charset="UTF-8">
-                                <style>
-                                body {
-                                margin: 0;
-                                padding: 40px 0;
-                                background: #121212;
-                                font-family: 'Segoe UI', sans-serif;
-                                color: #f0f0f0;
-                                }
-                                .invoice {
-                                max-width: 600px;
-                                margin: auto;
-                                background: #1e1e1e;
-                                padding: 30px;
-                                border-radius: 10px;
-                                border: 2px solid #47d9a8;
-                                }
-                                .invoice-header {
-                                text-align: center;
-                                }
-                                .invoice-subinfo {
-                                color: #bbb;
-                                }
-                                table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                font-size: 14px;
-                                }
-                                td, th {
-                                padding: 10px;
-                                }
-                                .items th {
-                                background: #47d9a8;
-                                color: #121212;
-                                }
-                                .items td {
-                                border-bottom: 1px solid #333;
-                                }
-                                .total {
-                                font-size: 16px;
-                                font-weight: bold;
-                                }
-                                .footer {
-                                text-align: center;
-                                margin-top: 30px;
-                                color: #aaa;
-                                font-size: 13px;
-                                }
-                                </style>
-                                </head>
-                                
-                                <body>
-                                <div class="invoice">
-                                <div class="invoice-header">
-                                        <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png" width="140"/>
-                                        <div class="invoice-subinfo"><strong>Bill Receipt</strong></div>
-                                </div>
-                                
-                                <table>
-                                        <tr>
-                                        <td><strong>Order No:</strong> ${orderData.ordno}</td>
-                                        <td style="text-align:right"><strong>Date:</strong> ${orderData.orddate}</td>
-                                        </tr>
-                                        <tr>
-                                        <td><strong>Customer:</strong> ${orderData.customer}</td>
-                                        <td style="text-align:right"><strong>Table:</strong> ${orderData.tblno}</td>
-                                        </tr>
-                                        <tr>
-                                        <td><strong>Service:</strong> ${orderData.service}</td>
-                                        <td style="text-align:right"><strong>Payment:</strong> ${orderData.paymentmode}</td>
-                                        </tr>
-                                </table>
-                                
-                                <br/>
-                                
-                                <table class="items">
-                                        <thead>
-                                        <tr>
-                                                <th>Item</th>
-                                                <th>Qty</th>
-                                                <th style="text-align:right">Price</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        ${orderData.data.map(item => `
-                                                <tr>
-                                                <td>${item.foodname}</td>
-                                                <td>${item.quantity}</td>
-                                                <td style="text-align:right">₹${item.price}</td>
-                                                </tr>
-                                        `).join("")}
-                                        </tbody>
-                                </table>
-                                
-                                <br/>
-                                
-                                <table>
-                                        <tr>
-                                        <td>Subtotal</td>
-                                        <td style="text-align:right">${orderData.amount}</td>
-                                        </tr>
-                                        <tr>
-                                        <td>Tip</td>
-                                        <td style="text-align:right">${orderData.tipamount || 0}</td>
-                                        </tr>
-                                        <tr>
-                                        <td>Tax</td>
-                                        <td style="text-align:right">${orderData.taxamount} (${orderData.taxpercent}%)</td>
-                                        </tr>
-                                        <tr class="total">
-                                        <td>Total</td>
-                                        <td style="text-align:right">
-                                                ${orderData.totalamount}
-                                        </td>
-                                        </tr>
-                                </table>
-                                
-                                <div class="footer">
-                                        Thank you for dining with us! <br/>
-                                        <strong>Moonlight Café</strong>
-                                </div>
-                                </div>
-                                </body>
+                                        <head>
+                                                <meta charset="UTF-8">
+                                                <style>
+                                                        body {
+                                                                margin: 0;
+                                                                padding: 40px 0;
+                                                                background: #121212;
+                                                                font-family: 'Segoe UI', sans-serif;
+                                                                color: #f0f0f0;
+                                                        }
+
+                                                        .container {
+                                                                max-width: 80%;
+                                                                margin: auto;
+                                                                background: #1e1e1e;
+                                                                border-radius: 15px;
+                                                                border: 1px solid #47d9a8;
+                                                                box-shadow: 0 0 20px rgba(71, 217, 168, 0.25);
+                                                                overflow: hidden;
+                                                        }
+
+                                                        /* HEADER */
+                                                        .header {
+                                                                background: #111;
+                                                                text-align: center;
+                                                                padding: 20px;
+                                                                border-bottom: 2px solid #47d9a8;
+                                                        }
+
+                                                        .title {
+                                                                text-align: center;
+                                                                color: #47d9a8;
+                                                                margin: 20px 0 10px;
+                                                                font-size: 22px;
+                                                        }
+
+                                                        /* BOXES */
+                                                        .box {
+                                                                margin: 20px;
+                                                                border: 1px solid #47d9a8;
+                                                                border-radius: 10px;
+                                                                overflow: hidden;
+                                                                background: #1f1f1f;
+                                                        }
+
+                                                        /* TABLE */
+                                                        .table {
+                                                                width: 100%;
+                                                                border-collapse: collapse;
+                                                                table-layout: fixed;
+                                                        }
+
+                                                        .table td {
+                                                                padding: 10px;
+                                                                border-bottom: 1px solid #333;
+                                                                font-size: 14px;
+                                                        }
+
+                                                        .table td:last-child {
+                                                                text-align: right;
+                                                        }
+
+                                                        /* ITEMS TABLE */
+                                                        .items th {
+                                                                background: #47d9a8;
+                                                                color: #111;
+                                                                padding: 10px;
+                                                                font-size: 14px;
+                                                        }
+
+                                                        .items td {
+                                                                padding: 10px;
+                                                                border-bottom: 1px solid #333;
+                                                        }
+
+                                                        .items td:nth-child(2) {
+                                                                text-align: center;
+                                                                width: 15%;
+                                                        }
+
+                                                        .items td:last-child {
+                                                                text-align: right;
+                                                                width: 25%;
+                                                        }
+
+                                                        /* TOTAL */
+                                                        .total-row td {
+                                                                font-size: 16px;
+                                                                font-weight: bold;
+                                                        }
+
+                                                        .total-amount {
+                                                                color: #47d9a8;
+                                                                font-size: 18px;
+                                                        }
+
+                                                        /* FOOTER */
+                                                        .footer {
+                                                                text-align: center;
+                                                                padding: 20px;
+                                                                color: #bbb;
+                                                                font-size: 13px;
+                                                        }
+                                                        .section-title {
+                                                                text-align: center;
+                                                                padding: 12px 10px;
+                                                                border-bottom: 1px solid #333;
+                                                                background: #181818;
+                                                        }
+
+                                                        .section-title h3 {
+                                                                margin: 0;
+                                                                color: #47d9a8;
+                                                                font-size: 15px;
+                                                                letter-spacing: 1px;
+                                                                font-weight: 600;
+                                                        }
+                                                </style>
+                                        </head>
+
+                                        <body>
+
+                                                <div class="container">
+
+                                                        <!-- HEADER -->
+                                                        <div class="header">
+                                                                <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png" width="110">
+                                                        </div>
+
+                                                        <div class="title">Bill Receipt</div>
+
+                                                        <!-- ORDER DETAILS -->
+                                                        <div class="box">
+                                                                <table class="table">
+                                                                       <tr>
+                                                                                <td colspan="2" class="section-title">
+                                                                                        <h3>ORDER DETAILS</h3>
+                                                                                </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Order No</td>
+                                                                                <td style="color:#47d9a8;"><strong>${orderData.ordno}</strong></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Date</td>
+                                                                                <td>${orderData.orddate}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Customer</td>
+                                                                                <td>${orderData.customer}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Table No</td>
+                                                                                <td>${orderData.tblno}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Service Type</td>
+                                                                                <td>${orderData.service}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Payment Mode</td>
+                                                                                <td>${orderData.paymentmode}</td>
+                                                                        </tr>
+                                                                </table>
+                                                        </div>
+
+                                                        <!-- ITEMS -->
+                                                        <div class="box">
+                                                                <table class="table items">
+                                                                        <thead>
+                                                                                <tr>
+                                                                                        <th style="width:60%; text-align:left;">Item</th>
+                                                                                        <th style="width:15%; text-align:center;">Qty</th>
+                                                                                        <th style="width:25%; text-align:right;">Price</th>
+                                                                                </tr>
+                                                                        </thead>
+
+                                                                        <tbody>
+                                                                ${orderData.data.map(item => `
+                                                                        <tr>
+                                                                                <td>${item.foodname}</td>
+                                                                                <td style="text-align:center;">${item.quantity}</td>
+                                                                                <td style="text-align:right;">₹${item.price}</td>
+                                                                        </tr>
+                                                                `).join("")}
+                                                                </tbody>
+                                                                </table>
+                                                        </div>
+
+                                                        <!-- SUMMARY -->
+                                                        <div class="box">
+                                                                <table class="table">
+                                                                     <tr>
+                                                                                <td colspan="2" class="section-title">
+                                                                                        <h3>PAYMENT SUMMARY</h3>
+                                                                                </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Subtotal</td>
+                                                                                <td>${orderData.amount}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Tip</td>
+                                                                                <td>${orderData.tipamount || "₹0"}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                                <td>Tax (${orderData.taxpercent}%)</td>
+                                                                                <td>${orderData.taxamount}</td>
+                                                                        </tr>
+                                                                        <tr class="total-row">
+                                                                                <td>Total Amount</td>
+                                                                                <td class="total-amount">${orderData.totalamount}</td>
+                                                                        </tr>
+                                                                </table>
+                                                        </div>
+
+                                                        <!-- FOOTER -->
+                                                        <div class="footer">
+                                                                Thank you for dining with us!<br>
+                                                                <a href="${Config.moonlightcafe}" style="color:#47d9a8; text-decoration:none; font-weight:600; letter-spacing:0.5px;"><strong style="color:#47d9a8;">Moonlight Cafe</strong></a>
+                                                        </div>
+
+                                                </div>
+
+                                        </body>
                                 </html>
-                        `;
+                                `;
 
                         /* ================== LOAD HTML ================== */
                         await page.setContent(html, { waitUntil: "networkidle0" });
@@ -717,13 +818,21 @@ class Methods {
 
         generateOrderItemsHTML(items) {
                 return items.map(item => `
-                    <tr>
-                        <td>${item.foodname}</td>
-                        <td>${item.quantity}</td>
-                        <td style="text-align:right;">₹${item.price}</td>
-                    </tr>
+                        <tr>
+                        <td style="padding:10px; word-break:break-word; border-bottom:1px solid #333;">
+                                ${item.foodname}
+                        </td>
+
+                        <td style="padding:10px; word-break:break-word; text-align:center; border-bottom:1px solid #333;">
+                                ${item.quantity}
+                        </td>
+
+                        <td style="padding:10px; word-break:break-word; text-align:right; border-bottom:1px solid #333;">
+                                ₹${item.price}
+                        </td>
+                        </tr>
                 `).join('');
-        };
+        }
 
         formatDateToCustom(dateInput) {
                 const date = new Date(dateInput);
@@ -755,61 +864,61 @@ class Methods {
                 let bits = 0;
                 let value = 0;
                 let output = "";
-        
+
                 for (const byte of buffer) {
                         value = (value << 8) | byte;
                         bits += 8;
-        
+
                         while (bits >= 5) {
                                 output += BASE32_ALPHABET[(value >>> (bits - 5)) & 31];
                                 bits -= 5;
                         }
                 }
-        
+
                 if (bits > 0) {
                         output += BASE32_ALPHABET[(value << (5 - bits)) & 31];
                 }
-        
+
                 return output;
         }
-        
+
         fromBase32(input = "") {
                 const clean = input.toUpperCase().replace(/=+$/g, "").replace(/[^A-Z2-7]/g, "");
                 let bits = 0;
                 let value = 0;
                 const bytes = [];
-        
+
                 for (const ch of clean) {
                         const idx = BASE32_ALPHABET.indexOf(ch);
                         if (idx < 0) continue;
                         value = (value << 5) | idx;
                         bits += 5;
-        
+
                         if (bits >= 8) {
                                 bytes.push((value >>> (bits - 8)) & 255);
                                 bits -= 8;
                         }
                 }
-        
+
                 return Buffer.from(bytes);
         }
-        
+
         hotp(secretBase32, counter) {
                 const secret = this.fromBase32(secretBase32);
                 const counterBuffer = Buffer.alloc(8);
                 const big = BigInt(counter);
                 counterBuffer.writeBigUInt64BE(big);
-        
+
                 const hmac = crypto.createHmac("sha1", secret).update(counterBuffer).digest();
                 const offset = hmac[hmac.length - 1] & 0x0f;
                 const binary = ((hmac[offset] & 0x7f) << 24) |
                         ((hmac[offset + 1] & 0xff) << 16) |
                         ((hmac[offset + 2] & 0xff) << 8) |
                         (hmac[offset + 3] & 0xff);
-        
+
                 return (binary % 1000000).toString().padStart(6, "0");
         }
-        
+
         generateBase32Secret(lengthBytes = 20) {
                 return this.toBase32(crypto.randomBytes(lengthBytes));
         }
@@ -830,12 +939,12 @@ class Methods {
                 }
                 return false;
         }
-        
+
         buildOtpAuthUrl({ issuer, accountName, secret }) {
                 const encIssuer = encodeURIComponent(issuer);
                 const encAccount = encodeURIComponent(accountName);
                 return `otpauth://totp/${encIssuer}:${encAccount}?secret=${secret}&issuer=${encIssuer}&algorithm=SHA1&digits=6&period=30`;
         }
-        
+
 }
 export default Methods;

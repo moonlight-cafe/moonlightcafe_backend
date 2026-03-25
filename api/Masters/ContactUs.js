@@ -51,12 +51,11 @@ class AddToCart {
                         const adddata = await MainDB.executedata("i", new _ContactUs(), "tblcafe_contactus", req.body)
 
                         let template = Config.emailtemplates['customersupport'];
-                        console.log("🚀 ~ ContactUs.js:59 ~ AddToCart ~ AddContactUs ~ req.body>>", req.body);
                         let senddata = {
-                                ticketId: req.body.tickitid,
-                                name: req.body.name,
-                                message: req.body.message,
-                                createdAt: Methods.formatDateToCustom(req.body.createdAt)
+                                ticketId: adddata.data.tickitid,
+                                name: adddata.data.name,
+                                message: adddata.data.message,
+                                createdAt: Methods.formatDateToCustom(adddata.data.createdAt)
                         };
                         await MainDB.sendMail('', [req.body.email], template, '', senddata);
 

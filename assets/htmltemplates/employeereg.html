@@ -3,92 +3,136 @@
 
 <head>
         <meta charset="UTF-8">
-        <title>Moonlight Cafe - Employee Registration Successful</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to Moonlight Cafe</title>
 </head>
 
-<body style="margin: 0; padding: 20px; font-family: 'Century Gothic', Arial, sans-serif; background-color: #f5f5f5;">
-        <table align="center" cellpadding="0" cellspacing="0"
-                style="max-width: 600px; background-color: #ffffff; border-radius: 15px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); overflow: hidden; width: 100%;">
+<body style="margin:0; padding:20px; background:#1e1e1e; font-family:Arial, sans-serif;">
+
+        <table align="center" width="100%" cellpadding="0" cellspacing="0"
+                style="max-width:80%; background:#2a2a2a; border-radius:20px; overflow:hidden; border:1px solid #47d9a8; box-shadow:0 0 20px rgba(71,217,168,0.25);">
+
+                <!-- HEADER -->
                 <tr>
-                        <td style="background-color: #000; text-align: center; padding: 20px;">
+                        <td style="background:#111; text-align:center; padding:20px; border-bottom:2px solid #47d9a8;">
                                 <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png"
-                                        alt="Moonlight Cafe Logo" style="width: 150px;">
+                                        width="110" style="display:block; margin:auto;">
                         </td>
                 </tr>
 
+                <!-- BODY -->
                 <tr>
-                        <td style="padding: 30px;">
-                                <h2 style="font-size: 26px; font-weight: bold; color: #333333; margin: 0 0 20px 0;">
-                                        Employee Registration Successful!</h2>
+                        <td style="padding:30px;">
 
-                                <p style="font-size: 18px; color: #555;">Dear <strong>#name?</strong>,</p>
+                                <h2 style="text-align:center; margin: 0; margin-bottom:10px; color:#47d9a8;">
+                                        Welcome to Moonlight Cafe
+                                </h2>
 
-                                <p style="font-size: 16px; color: #555; line-height: 1.6;">
-                                        Congratulations! You have successfully been registered as an employee at
-                                        Moonlight Cafe. Here are your registration details:
+                                <p style="font-size:18px; color:#cccccc; margin-bottom:20px;">
+                                        Hello <strong style="color:#47d9a8;">#name?</strong>,
                                 </p>
 
-                                <table cellpadding="0" cellspacing="0" width="100%"
-                                        style="margin: 20px 0; padding: 20px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 10px;">
+                                <p style="font-size:14px; color:#bbbbbb; line-height:1.6;">
+                                        We’re excited to have you on board! Your employee account has been successfully
+                                        created.
+                                        You can now log in to the Moonlight Cafe system and start managing your
+                                        responsibilities.
+                                </p>
+
+                                <!-- DETAILS -->
+                                <table width="100%" cellpadding="12" cellspacing="0"
+                                        style="margin:25px 0; background:#1f1f1f; border:1px solid #47d9a8; border-radius:10px;">
+
                                         <tr>
-                                                <td
-                                                        style="font-size: 18px; font-weight: bold; color: #333333; padding-bottom: 10px;">
-                                                        🔐 Registration Details</td>
+                                                <td style="color:#888; font-size:14px;">Employee ID</td>
+                                                <td style="color:#47d9a8; font-size:14px; text-align:right;">
+                                                        <strong>#employeeid?</strong>
+                                                </td>
                                         </tr>
 
                                         <tr>
-                                                <td style="padding-top: 10px;">
-                                                        <div
-                                                                style="font-size: 14px; color: #555555; margin-bottom: 5px;">
-                                                                Employee ID:</div>
-                                                        <div
-                                                                style="background-color: #ffffff; padding: 10px 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; color: #2c3e50;">
-                                                                #employeeid?
-                                                        </div>
+                                                <td style="color:#888; font-size:14px;">Role Assigned</td>
+                                                <td style="color:#47d9a8; font-size:14px; text-align:right;">
+                                                        <strong>#role?</strong>
                                                 </td>
                                         </tr>
+
+                                        <!--   <tr>
+                                                <td style="color:#888; font-size:14px;">Account Status</td>
+                                                <td style="color:#47d9a8; font-size:14px; text-align:right;">
+                                                        <strong>Active</strong>
+                                                </td>
+                                        </tr> -->
+
+                                </table>
+
+                                <!-- PASSWORD INFO -->
+                                <table width="100%" cellpadding="12" cellspacing="0"
+                                        style="background:#111; border-left:4px solid #47d9a8; border-radius:8px;">
+
                                         <tr>
-                                                <td style="padding-top: 15px;">
-                                                        <div
-                                                                style="font-size: 14px; color: #555555; margin-bottom: 5px;">
-                                                                Role:</div>
-                                                        <div
-                                                                style="background-color: #ffffff; padding: 10px 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; color: #2c3e50;">
-                                                                #role?
-                                                        </div>
+                                                <td style="font-size:13px; color:#cccccc; line-height:1.6;">
+
+                                                        <strong style="color:#47d9a8;">🔐 Login Password
+                                                                Information</strong><br><br>
+
+                                                        Your temporary password is automatically generated using this
+                                                        format:<br>
+                                                        <b>FirstName@Last5DigitsOfMobileReversed#</b><br><br>
+
+                                                        Example: Jhon@09876#<br><br>
+
+                                                        <span style="color:#ff6b6b;">
+                                                                ⚠ Important: Please change your password immediately
+                                                                after your first login to keep your account secure.
+                                                        </span>
+
+                                                </td>
+                                        </tr>
+
+                                </table>
+
+                                <!-- LOGIN BUTTON -->
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                                <td align="center" style="padding-top:30px;">
+
+                                                        <a href="#loginurl?" style="
+                                                        display:inline-block;
+                                                        padding:12px 22px;
+                                                        color:#28a87f;
+                                                        text-decoration:none;
+                                                        font-weight:bold;
+                                                        border-radius:8px;
+                                                        border:1px solid #47d9a8;
+                                                        background-color:transparent;
+                                                        font-size:14px;">
+                                                                Login to Dashboard
+                                                        </a>
+
                                                 </td>
                                         </tr>
                                 </table>
 
-                                <p style="font-size: 16px; color: #555; margin-top: 30px;">We are excited to have you on
-                                        our team! Feel free to reach out to your manager or HR if you have any
-                                        questions.<br><strong>Moonlight Cafe Team</strong></p>
-
-                                <!-- Password Note Section -->
-                                <div style="margin-top: 30px; font-size: 16px; color: #555;">
-                                        <strong>Password Setup:</strong><br>
-                                        Your password is automatically generated based on your first name and employee
-                                        number.<br>
-                                        The format is:
-                                        <strong>FirstName@Last5DigitsOfEmployeeNumberReversed#</strong>.<br>
-                                        For example, if your first name is <strong>Jay</strong> and your employee number
-                                        is <strong>1234567890</strong>, your password will be
-                                        <strong>Jay@09876#</strong>.<br><br>
-                                        Please keep this information secure and update your password after logging in
-                                        for the first time.
-                                </div>
+                                <!-- SIGNATURE -->
+                                <p style="font-size:14px; color:#cccccc; margin: 0; margin-top:20px;">
+                                        Regards,<br>
+                                        <strong style="color:#47d9a8;">Moonlight Cafe</strong>
+                                </p>
 
                         </td>
                 </tr>
 
+                <!-- FOOTER -->
                 <tr>
                         <td
-                                style="background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #999;">
-                                This email was sent by <strong>Moonlight Cafe</strong>.
+                                style="background:#111; text-align:center; padding:15px; font-size:12px; border-top:2px solid #47d9a8; color:#47d9a8;">
+                                © 2026 Moonlight Cafe. All rights reserved.
                         </td>
                 </tr>
+
         </table>
+
 </body>
 
 </html>

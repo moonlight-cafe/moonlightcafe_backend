@@ -13,6 +13,6 @@ export default class Category {
                         price: { type: String, default: "" },
                         imageurl: { type: String, default: "" }
                 }]
-                this.totalamount = { type: String, default: "" }
+                this.totalamount = { type: Number, default: 0 }
         }
 }
