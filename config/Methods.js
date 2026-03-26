@@ -7,7 +7,7 @@ import _CustomerDetails from "../model/CustomerDetails/CustomerDetails.js"
 import path from 'path'
 import fs from 'fs'
 import axios from "axios";
-import puppeteer from "puppeteer";
+import PDFDocument from 'pdfkit';
 import streamifier from 'streamifier';
 
 const Objectid = ObjectId.Types.ObjectId
@@ -239,287 +239,319 @@ class Methods {
 
         /* ================== GENERATE + UPLOAD BILL PDF ================== */
         async GenerateBillPDF(orderData) {
-                let browser;
-
                 try {
-                        browser = await puppeteer.launch({
-                                headless: "new",
-                                args: ["--no-sandbox", "--disable-setuid-sandbox"]
-                        });
+                        return await new Promise((resolve, reject) => {
+                                const doc = new PDFDocument({
+                                        size: 'A4',
+                                        margins: { top: 40, bottom: 40, left: 50, right: 50 },
+                                        bufferPages: true
+                                });
 
-                        const page = await browser.newPage();
-
-                        /* ================== HTML TEMPLATE ================== */
-                        const html = `
-                                <!DOCTYPE html>
-                                <html>
-                                        <head>
-                                                <meta charset="UTF-8">
-                                                <style>
-                                                        body {
-                                                                margin: 0;
-                                                                padding: 40px 0;
-                                                                background: #121212;
-                                                                font-family: 'Segoe UI', sans-serif;
-                                                                color: #f0f0f0;
-                                                        }
-
-                                                        .container {
-                                                                max-width: 80%;
-                                                                margin: auto;
-                                                                background: #1e1e1e;
-                                                                border-radius: 15px;
-                                                                border: 1px solid #47d9a8;
-                                                                box-shadow: 0 0 20px rgba(71, 217, 168, 0.25);
-                                                                overflow: hidden;
-                                                        }
-
-                                                        /* HEADER */
-                                                        .header {
-                                                                background: #111;
-                                                                text-align: center;
-                                                                padding: 20px;
-                                                                border-bottom: 2px solid #47d9a8;
-                                                        }
-
-                                                        .title {
-                                                                text-align: center;
-                                                                color: #47d9a8;
-                                                                margin: 20px 0 10px;
-                                                                font-size: 22px;
-                                                        }
-
-                                                        /* BOXES */
-                                                        .box {
-                                                                margin: 20px;
-                                                                border: 1px solid #47d9a8;
-                                                                border-radius: 10px;
-                                                                overflow: hidden;
-                                                                background: #1f1f1f;
-                                                        }
-
-                                                        /* TABLE */
-                                                        .table {
-                                                                width: 100%;
-                                                                border-collapse: collapse;
-                                                                table-layout: fixed;
-                                                        }
-
-                                                        .table td {
-                                                                padding: 10px;
-                                                                border-bottom: 1px solid #333;
-                                                                font-size: 14px;
-                                                        }
-
-                                                        .table td:last-child {
-                                                                text-align: right;
-                                                        }
-
-                                                        /* ITEMS TABLE */
-                                                        .items th {
-                                                                background: #47d9a8;
-                                                                color: #111;
-                                                                padding: 10px;
-                                                                font-size: 14px;
-                                                        }
-
-                                                        .items td {
-                                                                padding: 10px;
-                                                                border-bottom: 1px solid #333;
-                                                        }
-
-                                                        .items td:nth-child(2) {
-                                                                text-align: center;
-                                                                width: 15%;
-                                                        }
-
-                                                        .items td:last-child {
-                                                                text-align: right;
-                                                                width: 25%;
-                                                        }
-
-                                                        /* TOTAL */
-                                                        .total-row td {
-                                                                font-size: 16px;
-                                                                font-weight: bold;
-                                                        }
-
-                                                        .total-amount {
-                                                                color: #47d9a8;
-                                                                font-size: 18px;
-                                                        }
-
-                                                        /* FOOTER */
-                                                        .footer {
-                                                                text-align: center;
-                                                                padding: 20px;
-                                                                color: #bbb;
-                                                                font-size: 13px;
-                                                        }
-                                                        .section-title {
-                                                                text-align: center;
-                                                                padding: 12px 10px;
-                                                                border-bottom: 1px solid #333;
-                                                                background: #181818;
-                                                        }
-
-                                                        .section-title h3 {
-                                                                margin: 0;
-                                                                color: #47d9a8;
-                                                                font-size: 15px;
-                                                                letter-spacing: 1px;
-                                                                font-weight: 600;
-                                                        }
-                                                </style>
-                                        </head>
-
-                                        <body>
-
-                                                <div class="container">
-
-                                                        <!-- HEADER -->
-                                                        <div class="header">
-                                                                <img src="https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png" width="110">
-                                                        </div>
-
-                                                        <div class="title">Bill Receipt</div>
-
-                                                        <!-- ORDER DETAILS -->
-                                                        <div class="box">
-                                                                <table class="table">
-                                                                       <tr>
-                                                                                <td colspan="2" class="section-title">
-                                                                                        <h3>ORDER DETAILS</h3>
-                                                                                </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Order No</td>
-                                                                                <td style="color:#47d9a8;"><strong>${orderData.ordno}</strong></td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Date</td>
-                                                                                <td>${orderData.orddate}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Customer</td>
-                                                                                <td>${orderData.customer}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Table No</td>
-                                                                                <td>${orderData.tblno}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Service Type</td>
-                                                                                <td>${orderData.service}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Payment Mode</td>
-                                                                                <td>${orderData.paymentmode}</td>
-                                                                        </tr>
-                                                                </table>
-                                                        </div>
-
-                                                        <!-- ITEMS -->
-                                                        <div class="box">
-                                                                <table class="table items">
-                                                                        <thead>
-                                                                                <tr>
-                                                                                        <th style="width:60%; text-align:left;">Item</th>
-                                                                                        <th style="width:15%; text-align:center;">Qty</th>
-                                                                                        <th style="width:25%; text-align:right;">Price</th>
-                                                                                </tr>
-                                                                        </thead>
-
-                                                                        <tbody>
-                                                                ${orderData.data.map(item => `
-                                                                        <tr>
-                                                                                <td>${item.foodname}</td>
-                                                                                <td style="text-align:center;">${item.quantity}</td>
-                                                                                <td style="text-align:right;">₹${item.price}</td>
-                                                                        </tr>
-                                                                `).join("")}
-                                                                </tbody>
-                                                                </table>
-                                                        </div>
-
-                                                        <!-- SUMMARY -->
-                                                        <div class="box">
-                                                                <table class="table">
-                                                                     <tr>
-                                                                                <td colspan="2" class="section-title">
-                                                                                        <h3>PAYMENT SUMMARY</h3>
-                                                                                </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Subtotal</td>
-                                                                                <td>${orderData.amount}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Tip</td>
-                                                                                <td>${orderData.tipamount || "₹0"}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                                <td>Tax (${orderData.taxpercent}%)</td>
-                                                                                <td>${orderData.taxamount}</td>
-                                                                        </tr>
-                                                                        <tr class="total-row">
-                                                                                <td>Total Amount</td>
-                                                                                <td class="total-amount">${orderData.totalamount}</td>
-                                                                        </tr>
-                                                                </table>
-                                                        </div>
-
-                                                        <!-- FOOTER -->
-                                                        <div class="footer">
-                                                                Thank you for dining with us!<br>
-                                                                <a href="${Config.moonlightcafe}" style="color:#47d9a8; text-decoration:none; font-weight:600; letter-spacing:0.5px;"><strong style="color:#47d9a8;">Moonlight Cafe</strong></a>
-                                                        </div>
-
-                                                </div>
-
-                                        </body>
-                                </html>
-                                `;
-
-                        /* ================== LOAD HTML ================== */
-                        await page.setContent(html, { waitUntil: "networkidle0" });
-
-                        /* ================== GENERATE PDF ================== */
-                        const pdfBuffer = await page.pdf({
-                                format: "A4",
-                                printBackground: true
-                        });
-
-                        /* ================== UPLOAD TO CLOUDINARY ================== */
-                        const uploadResult = await new Promise((resolve, reject) => {
-                                cloudinary.uploader.upload_stream(
-                                        {
-                                                folder: "bills",
-                                                resource_type: "raw",
-                                                public_id: orderData.ordno,
-                                                format: "pdf",
-                                                use_filename: true,
-                                                unique_filename: false,
-                                                overwrite: true,
-                                                access_mode: "public"
-                                        },
-                                        (error, result) => {
-                                                if (error) reject(error);
-                                                else resolve(result);
+                                const buffers = [];
+                                doc.on('data', buffers.push.bind(buffers));
+                                doc.on('end', async () => {
+                                        try {
+                                                const pdfBuffer = Buffer.concat(buffers);
+                                                const uploadResult = await new Promise((res, rej) => {
+                                                        cloudinary.uploader.upload_stream(
+                                                                {
+                                                                        folder: "bills",
+                                                                        resource_type: "raw",
+                                                                        public_id: orderData.ordno,
+                                                                        format: "pdf",
+                                                                        use_filename: true,
+                                                                        unique_filename: false,
+                                                                        overwrite: true,
+                                                                        access_mode: "public"
+                                                                },
+                                                                (error, result) => {
+                                                                        if (error) rej(error);
+                                                                        else res(result);
+                                                                }
+                                                        ).end(pdfBuffer);
+                                                });
+                                                resolve(uploadResult.secure_url);
+                                        } catch (err) {
+                                                reject(err);
                                         }
-                                ).end(pdfBuffer);
+                                });
+
+                                // ── Colors ──────────────────────────────────────────────────
+                                const BG_PAGE = '#1e1e1e';
+                                const BG_CARD = '#2a2a2a';
+                                const BG_INNER = '#1f1f1f';
+                                const BG_HEADER = '#111111';
+                                const ACCENT = '#47d9a8';
+                                const TEXT_LIGHT = '#cccccc';
+                                const TEXT_WHITE = '#ffffff';
+                                const LINE_COL = '#333333';
+                                const RADIUS = 10;
+
+                                const PAGE_W = doc.page.width;
+                                const CARD_X = 50;
+                                const CARD_W = PAGE_W - 100;   // left+right margin = 100
+                                const COL_R_W = 160;            // right-column width for values
+                                const CARD_PAD = 14;             // inner horizontal padding inside each card
+
+                                // ── Helpers ──────────────────────────────────────────────────
+
+                                /** Full-page dark background */
+                                const drawPageBg = () => {
+                                        doc.rect(0, 0, PAGE_W, doc.page.height).fill(BG_PAGE);
+                                };
+
+                                /**
+                                 * Draw a rounded card outline (border only, transparent fill
+                                 * so inner rows are visible on top).
+                                 * Returns the y after the card border is stroked.
+                                 */
+                                const strokeCard = (x, y, w, h, color = ACCENT) => {
+                                        doc.roundedRect(x, y, w, h, RADIUS)
+                                                .lineWidth(1)
+                                                .stroke(color);
+                                };
+
+                                /**
+                                 * Draw a filled rounded rect (used for background fill of a card).
+                                 */
+                                const fillCard = (x, y, w, h, fillColor) => {
+                                        doc.roundedRect(x, y, w, h, RADIUS)
+                                                .fill(fillColor);
+                                };
+
+                                /**
+                                 * Section header row (accent background, dark text, full-width
+                                 * inside the card).  Top corners rounded only.
+                                 */
+                                const drawSectionHeader = (title, x, y, w) => {
+                                        // Rounded top, square bottom → draw as rect + manual top arc
+                                        // Easiest: draw full rounded rect, then cover bottom half corners
+                                        doc.roundedRect(x, y, w, 30, RADIUS).fill(BG_HEADER);
+                                        // Bottom cover to make bottom corners square-ish
+                                        doc.rect(x, y + 15, w, 15).fill(BG_HEADER);
+                                        // Title text
+                                        doc.fillColor(ACCENT)
+                                                .fontSize(12)
+                                                .font('Helvetica-Bold')
+                                                .text(title, x, y + 10, { align: 'center', width: w });
+                                        // Bottom border line
+                                        doc.moveTo(x, y + 30)
+                                                .lineTo(x + w, y + 30)
+                                                .lineWidth(1)
+                                                .stroke(LINE_COL);
+                                        return y + 30;
+                                };
+
+                                /**
+                                 * Draw a single label-value row inside a card.
+                                 * Returns updated y after the row.
+                                 */
+                                const drawRow = (label, value, x, y, w, opts = {}) => {
+                                        const rowH = opts.rowH || 32;          // taller rows = more vertical padding
+                                        const labelColor = opts.labelColor || TEXT_LIGHT;
+                                        const valueColor = opts.valueColor || TEXT_LIGHT;
+                                        const fontSize = opts.fontSize || 11;
+                                        const bold = opts.bold || false;
+
+                                        // Row background
+                                        doc.rect(x, y, w, rowH).fill(BG_INNER);
+
+                                        const textY = y + (rowH - fontSize) / 2 + 1;
+
+                                        // Label — respects left padding
+                                        doc.fillColor(labelColor)
+                                                .fontSize(fontSize)
+                                                .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+                                                .text(label, x + CARD_PAD, textY, {
+                                                        width: w - COL_R_W - CARD_PAD * 2,
+                                                        lineBreak: false
+                                                });
+
+                                        // Value — respects right padding
+                                        doc.fillColor(valueColor)
+                                                .fontSize(fontSize)
+                                                .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+                                                .text(String(value).replace(/₹/g, 'Rs. '),
+                                                        x + w - COL_R_W - CARD_PAD,
+                                                        textY,
+                                                        { width: COL_R_W, align: 'right', lineBreak: false });
+
+                                        return y + rowH;
+                                };
+
+                                /**
+                                 * Draw a horizontal separator line.
+                                 */
+                                const drawLine = (x, y, w) => {
+                                        doc.moveTo(x, y).lineTo(x + w, y).lineWidth(0.5).stroke(LINE_COL);
+                                };
+
+                                // ── Start drawing ────────────────────────────────────────────
+                                drawPageBg();
+
+                                // ─── Outer card background ───────────────────────────────────
+                                // We'll accumulate sections and know total height at the end,
+                                // so draw outer card bg first at full page minus margins.
+                                // (card height is computed section by section)
+
+                                let y = 40;
+
+                                // ─── HEADER (logo area) ──────────────────────────────────────
+                                const headerH = 70;
+                                fillCard(CARD_X, y, CARD_W, headerH, BG_HEADER);
+                                // Bottom border of header
+                                doc.moveTo(CARD_X, y + headerH).lineTo(CARD_X + CARD_W, y + headerH)
+                                        .lineWidth(2).stroke(ACCENT);
+
+                                // Cafe name as logo text (image loading is async — use text fallback)
+                                doc.fillColor(ACCENT)
+                                        .fontSize(22)
+                                        .font('Helvetica-Bold')
+                                        .text('Moonlight Cafe', CARD_X, y + 15, { align: 'center', width: CARD_W });
+                                doc.fillColor(TEXT_LIGHT)
+                                        .fontSize(11)
+                                        .font('Helvetica')
+                                        .text('~ Fine Dining Experience ~', CARD_X, y + 42, { align: 'center', width: CARD_W });
+                                y += headerH + 10;
+
+                                // ─── BILL RECEIPT TITLE ──────────────────────────────────────
+                                doc.fillColor(ACCENT)
+                                        .fontSize(16)
+                                        .font('Helvetica-Bold')
+                                        .text('Bill Receipt', CARD_X, y, { align: 'center', width: CARD_W });
+                                y += 28;
+
+                                // ─── ORDER DETAILS CARD ──────────────────────────────────────
+                                const details = [
+                                        { label: 'Order No', value: `#${orderData.ordno}`, accent: true },
+                                        { label: 'Date', value: orderData.orddate },
+                                        { label: 'Customer', value: orderData.customer },
+                                        { label: 'Table No', value: orderData.tblno },
+                                        { label: 'Service Type', value: orderData.service },
+                                        { label: 'Payment Mode', value: orderData.paymentmode }
+                                ];
+                                const detailRowH = 32;
+                                const detailCardH = 30 + details.length * detailRowH;   // header + rows
+
+                                fillCard(CARD_X, y, CARD_W, detailCardH, BG_INNER);
+                                let iy = drawSectionHeader('ORDER DETAILS', CARD_X, y, CARD_W);
+
+                                details.forEach((item, idx) => {
+                                        iy = drawRow(
+                                                item.label,
+                                                item.value,
+                                                CARD_X, iy, CARD_W,
+                                                {
+                                                        rowH: detailRowH,
+                                                        valueColor: item.accent ? ACCENT : TEXT_LIGHT,
+                                                }
+                                        );
+                                        if (idx < details.length - 1) drawLine(CARD_X, iy, CARD_W);
+                                });
+
+                                strokeCard(CARD_X, y, CARD_W, detailCardH);
+                                y += detailCardH + 15;
+
+                                // ─── ITEMS TABLE CARD ────────────────────────────────────────
+                                const items = orderData.data || [];
+                                const itemRowH = 32;
+                                const itemsCardH = 30 + items.length * itemRowH;
+
+                                fillCard(CARD_X, y, CARD_W, itemsCardH, BG_INNER);
+
+                                // Table header (accent background)
+                                doc.roundedRect(CARD_X, y, CARD_W, 30, RADIUS).fill(ACCENT);
+                                doc.rect(CARD_X, y + 15, CARD_W, 15).fill(ACCENT);   // square bottom of header
+
+                                doc.fillColor('#111111').fontSize(11).font('Helvetica-Bold');
+                                doc.text('Item', CARD_X + CARD_PAD, y + 10, { width: CARD_W * 0.55 - CARD_PAD, lineBreak: false });
+                                doc.text('Qty', CARD_X + CARD_W * 0.55, y + 10, { width: CARD_W * 0.15, align: 'center', lineBreak: false });
+                                doc.text('Price', CARD_X + CARD_W * 0.70, y + 10, { width: CARD_W * 0.28 - CARD_PAD, align: 'right', lineBreak: false });
+
+                                let ry = y + 30;
+                                items.forEach((item, idx) => {
+                                        doc.rect(CARD_X, ry, CARD_W, itemRowH).fill(BG_INNER);
+
+                                        const textY = ry + (itemRowH - 11) / 2 + 1;
+                                        doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica')
+                                                .text(item.foodname, CARD_X + CARD_PAD, textY,
+                                                        { width: CARD_W * 0.55 - CARD_PAD, lineBreak: false });
+                                        doc.text(String(item.quantity),
+                                                CARD_X + CARD_W * 0.55, textY,
+                                                { width: CARD_W * 0.15, align: 'center', lineBreak: false });
+                                        doc.text(String(item.price).replace(/₹/g, 'Rs. '),
+                                                CARD_X + CARD_W * 0.70, textY,
+                                                { width: CARD_W * 0.28 - CARD_PAD, align: 'right', lineBreak: false });
+
+                                        ry += itemRowH;
+                                        if (idx < items.length - 1) drawLine(CARD_X, ry, CARD_W);
+                                });
+
+                                strokeCard(CARD_X, y, CARD_W, itemsCardH);
+                                y += itemsCardH + 15;
+
+                                // ─── PAYMENT SUMMARY CARD ────────────────────────────────────
+                                const summaryRows = [
+                                        { label: 'Subtotal', value: orderData.amount },
+                                        { label: 'Tip', value: orderData.tipamount || 'Rs. 0' },
+                                        { label: `Tax (${orderData.taxpercent}%)`, value: orderData.taxamount },
+                                ];
+                                const totalRowH = 40;
+                                const summaryCardH = 30 + summaryRows.length * 32 + totalRowH;
+
+                                fillCard(CARD_X, y, CARD_W, summaryCardH, BG_INNER);
+                                let sy = drawSectionHeader('PAYMENT SUMMARY', CARD_X, y, CARD_W);
+
+                                summaryRows.forEach((item, idx) => {
+                                        sy = drawRow(item.label, item.value, CARD_X, sy, CARD_W);
+                                        drawLine(CARD_X, sy, CARD_W);
+                                });
+
+                                // Total row (bigger, highlighted)
+                                doc.rect(CARD_X, sy, CARD_W, totalRowH).fill(BG_INNER);
+                                doc.fillColor(TEXT_WHITE).fontSize(14).font('Helvetica-Bold')
+                                        .text('Total Amount', CARD_X + CARD_PAD, sy + 12,
+                                                { width: CARD_W - COL_R_W - CARD_PAD * 2, lineBreak: false });
+                                doc.fillColor(ACCENT).fontSize(16).font('Helvetica-Bold')
+                                        .text(String(orderData.totalamount).replace(/₹/g, 'Rs. '),
+                                                CARD_X + CARD_W - COL_R_W - CARD_PAD, sy + 12,
+                                                { width: COL_R_W, align: 'right', lineBreak: false });
+
+                                strokeCard(CARD_X, y, CARD_W, summaryCardH);
+                                y += summaryCardH + 20;
+
+                                // ─── FOOTER MESSAGE ──────────────────────────────────────────
+                                doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica')
+                                        .text('Thank you for dining with us!', CARD_X, y, { align: 'center', width: CARD_W });
+                                y += 16;
+                                doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica')
+                                        .text('We look forward to serving you again at ', CARD_X, y,
+                                                { align: 'center', width: CARD_W, continued: true });
+                                doc.fillColor(ACCENT).font('Helvetica-Bold').text('Moonlight Cafe', { continued: false });
+                                y += 30;
+
+                                // ─── FOOTER BAR ──────────────────────────────────────────────
+                                const footerH = 36;
+                                fillCard(CARD_X, y, CARD_W, footerH, BG_HEADER);
+                                doc.moveTo(CARD_X, y).lineTo(CARD_X + CARD_W, y).lineWidth(2).stroke(ACCENT);
+                                doc.fillColor(ACCENT).fontSize(10).font('Helvetica')
+                                        .text('© 2026 Moonlight Cafe. All rights reserved.',
+                                                CARD_X, y + 12, { align: 'center', width: CARD_W });
+
+                                // ─── Outer card border (full wrap) ───────────────────────────
+                                const outerTop = 40;
+                                const outerH = y + footerH - outerTop;
+                                doc.roundedRect(CARD_X, outerTop, CARD_W, outerH, RADIUS)
+                                        .lineWidth(1.5)
+                                        .stroke(ACCENT);
+
+                                doc.end();
                         });
-
-                        return uploadResult.secure_url;
-
                 } catch (err) {
                         console.error("Bill PDF Error:", err);
                         throw err;
-                } finally {
-                        if (browser) await browser.close();
                 }
         }
-
 
         async AxiosRequest(url, method = "GET", body = {}, headers = {}) {
 
