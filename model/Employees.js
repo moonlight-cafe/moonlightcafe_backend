@@ -26,5 +26,7 @@ export default class Employees {
                 this.twoFactorSecret = { type: String, default: "" };
                 this.twoFactorTempToken = { type: String, default: "" };
                 this.twoFactorTempTokenExpiry = { type: String, default: "" };
+
+                this.activeorders = { type: Array, default: [] };
         }
 }

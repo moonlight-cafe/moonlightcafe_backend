@@ -21,6 +21,7 @@ import _Background from "./api/Masters/Background.js"
 import _Dashboard from "./api/Dashboard.js"
 import _Menu from "./api/Masters/Menu.js"
 import _AboutUs from "./api/Masters/AboutUs.js"
+import _Shift from "./api/Masters/Shift.js"
 
 const Apisignup = new _Signup()
 const APICategory = new _Category()
@@ -38,6 +39,7 @@ const ApiBackground = new _Background()
 const ApiDashboard = new _Dashboard()
 const Menu = new _Menu()
 const APIAboutUs = new _AboutUs()
+const APIShift = new _Shift()
 
 var router = express.Router()
 router.use(setReqHeaderParams)
@@ -161,6 +163,14 @@ router.post(Config.endpointv1 + "/verify/otp/token", /* UserAuth(), */ APIOTP.OT
 
 router.post(Config.endpointv1 + "/aboutus", /* UserAuth(), */ APIAboutUs.ListAboutUs, sendResponse)
 
+router.post(Config.endpointv1 + "/shift/time/add", UserAuth(), APIShift.AddShiftTime, sendResponse)
+router.post(Config.endpointv1 + "/shift/time/list", UserAuth(), APIShift.ListShiftTime, sendResponse)
+router.post(Config.endpointv1 + "/shift/time/update", UserAuth(), APIShift.UpdateShiftTime, sendResponse)
+router.post(Config.endpointv1 + "/shift/time/delete", UserAuth(), APIShift.DeleteShiftTime, sendResponse)
+router.post(Config.endpointv1 + "/shift/assign/add", UserAuth(), APIShift.AddShiftAssign, sendResponse)
+router.post(Config.endpointv1 + "/shift/assign/list", UserAuth(), APIShift.ListShiftAssign, sendResponse)
+router.post(Config.endpointv1 + "/shift/assign/update", UserAuth(), APIShift.UpdateShiftAssign, sendResponse)
+router.post(Config.endpointv1 + "/shift/assign/delete", UserAuth(), APIShift.DeleteShiftAssign, sendResponse)
 
 router.post(Config.endpointv1 + "/file/upload", UserAuth(), FileUpload.fileupload, sendResponse)
 export default router

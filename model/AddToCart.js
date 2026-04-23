@@ -14,5 +14,11 @@ export default class Category {
                         imageurl: { type: String, default: "" }
                 }]
                 this.totalamount = { type: Number, default: 0 }
+                this.assignemployees = [{
+                        employeeid: { type: mongoose.Schema.Types.ObjectId, required: true },
+                        employeename: { type: String, default: "" },
+                        role: { type: String, default: "" },
+                        timestamp: { type: Date, default: new Date() }
+                }]
         }
 }

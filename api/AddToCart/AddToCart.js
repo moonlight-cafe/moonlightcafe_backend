@@ -4,21 +4,118 @@ import _FinalOrders from "../../model/FinalOrders.js"
 import _CustomerData from '../../model/CustomerDetails/CustomerDetails.js'
 import _Tables from "../../model/Tables.js"
 import _OrderRating from "../../model/Rating.js"
+import _ShiftTime from "../../model/ShiftTime.js"
+import _ShiftAssign from "../../model/ShiftAssign.js"
+import _Employees from "../../model/Employees.js"
 
 const ObjectId = Methods.getObjectId()
 class AddToCart {
         async InsertAddToCart(req, res, next) {
                 try {
+                        const customerid = new ObjectId(req.body.customerid);
+                        const servicetype = req.body.servicetype;
+                        let assignemployees = [];
+
+                        // 1. Check if customer already has items in tblcafe_tempcart
+                        const existingCart = await MainDB.getmenual("tblcafe_tempcart", new _AddToCart(), [
+                                { $match: { customerid: customerid, servicetype: servicetype } },
+                                { $limit: 1 }
+                        ]);
+
+                        if (existingCart.ResultData.length > 0 && Array.isArray(existingCart.ResultData[0].assignemployees) && existingCart.ResultData[0].assignemployees.length > 0) {
+                                // 2. Reuse existing employees
+                                assignemployees = existingCart.ResultData[0].assignemployees;
+                        } else {
+                                // 3. Assign new employees if none exist
+                                try {
+                                        const currentDate = new Date();
+                                        const currentMinutes = currentDate.getHours() * 60 + currentDate.getMinutes();
+                                        const todayDateStr = [currentDate.getFullYear(), String(currentDate.getMonth() + 1).padStart(2, '0'), String(currentDate.getDate()).padStart(2, '0')].join('-');
+
+                                        const allShifts = await MainDB.getmenual("tblcafe_shifttime", new _ShiftTime(), [{ $match: {} }]);
+
+                                        let activeShiftIds = [];
+                                        for (let shift of (allShifts.ResultData || [])) {
+                                                const sM = parseInt((shift.startTime || "00:00").split(':')[0]) * 60 + parseInt((shift.startTime || "00:00").split(':')[1]);
+                                                const eM = parseInt((shift.endTime || "00:00").split(':')[0]) * 60 + parseInt((shift.endTime || "00:00").split(':')[1]);
+                                                if (sM <= eM) {
+                                                        if (currentMinutes >= sM && currentMinutes <= eM) activeShiftIds.push(new ObjectId(shift._id));
+                                                } else {
+                                                        if (currentMinutes >= sM || currentMinutes <= eM) activeShiftIds.push(new ObjectId(shift._id));
+                                                }
+                                        }
+
+                                        if (activeShiftIds.length > 0) {
+                                                const activeAssignments = await MainDB.getmenual("tblcafe_shiftassign", new _ShiftAssign(), [{
+                                                        $match: { assigndate: todayDateStr, status: 1, shiftid: { $in: activeShiftIds } }
+                                                }]);
+
+                                                const activeEmployeeIds = (activeAssignments.ResultData || []).map(a => new ObjectId(a.employeeid));
+
+                                                if (activeEmployeeIds.length > 0) {
+                                                        const activeEmployees = await MainDB.getmenual("tblcafe_employees", new _Employees(), [{
+                                                                $match: { _id: { $in: activeEmployeeIds }, status: 1 }
+                                                        }]);
+
+                                                        let chefs = activeEmployees.ResultData.filter(e => e.role && e.role.toLowerCase() === 'chef');
+                                                        let waiters = activeEmployees.ResultData.filter(e => e.role && e.role.toLowerCase() === 'waiter');
+
+                                                        chefs.sort((a, b) => (a.activeorders?.length || 0) - (b.activeorders?.length || 0));
+                                                        waiters.sort((a, b) => (a.activeorders?.length || 0) - (b.activeorders?.length || 0));
+
+                                                        if (chefs.length > 0) {
+                                                                assignemployees.push({
+                                                                        employeeid: new ObjectId(chefs[0]._id),
+                                                                        employeename: chefs[0].name,
+                                                                        role: chefs[0].role,
+                                                                        timestamp: new Date()
+                                                                });
+                                                        }
+
+                                                        if (waiters.length > 0) {
+                                                                assignemployees.push({
+                                                                        employeeid: new ObjectId(waiters[0]._id),
+                                                                        employeename: waiters[0].name,
+                                                                        role: waiters[0].role,
+                                                                        timestamp: new Date()
+                                                                });
+                                                        }
+                                                }
+                                        }
+                                } catch (assignError) {
+                                        console.error("Error during assignment logic:", assignError);
+                                }
+                        }
+
                         const newCart = {
-                                customerid: req.body.customerid,
+                                customerid: customerid,
                                 data: req.body.data,
                                 totalamount: req.body.totalamount,
-                                servicetype: req.body.servicetype,
+                                servicetype: servicetype,
                                 includetip: req.body.includetip,
-                                tipamount: req.body.tipamount
+                                tipamount: req.body.tipamount,
+                                assignemployees: assignemployees
                         };
 
-                        await MainDB.executedata("i", new _AddToCart(), "tblcafe_tempcart", newCart);
+                        const insertdata = await MainDB.executedata("i", new _AddToCart(), "tblcafe_tempcart", newCart);
+
+                        // 4. Update employee active orders if a new assignment was made OR if we reuse existing ones for this specific cart item tracking
+                        // (Usually we track the cart id which is new for every item in tempcart in this specific setup)
+                        try {
+                                const cartId = insertdata.data ? insertdata.data._id : new ObjectId();
+                                const orderDetails = { cartid: cartId, customerid: customerid, totalamount: req.body.totalamount };
+
+                                for (let emp of assignemployees) {
+                                        const currentEmp = await MainDB.getmenual("tblcafe_employees", new _Employees(), [{ $match: { _id: new ObjectId(emp.employeeid) } }]);
+                                        if (currentEmp.ResultData.length > 0) {
+                                                let arr = currentEmp.ResultData[0].activeorders || [];
+                                                arr.push(orderDetails);
+                                                await MainDB.Update("tblcafe_employees", new _Employees(), [{ _id: new ObjectId(emp.employeeid) }, { activeorders: arr }]);
+                                        }
+                                }
+                        } catch (updateEmpError) {
+                                console.error("Error updating employee active orders:", updateEmpError);
+                        }
 
                         req.ResponseBody = {
                                 status: 200,
@@ -121,6 +218,9 @@ class AddToCart {
                                 newOrderNumber = "ORD" + nextNum.toString().padStart(7, '0');
                         }
 
+                        // Extract assignemployees from the first cart record (they should all be the same for this customer)
+                        const assignemployees = data.ResultData[0].assignemployees || [];
+
                         const insertObj = {
                                 orderno: newOrderNumber,
                                 customerid: new ObjectId(req.body.customerid),
@@ -144,6 +244,7 @@ class AddToCart {
                                 paymentmethod: 0,
                                 ispaid: 0,
                                 adminstatus: 0,
+                                assignemployees: assignemployees
                         }
 
                         const insertdata = await MainDB.executedata('i', new _FinalOrders(), "tblcafe_finalorders", insertObj)
@@ -253,6 +354,19 @@ class AddToCart {
                         }
 
                         /* ========================================================== */
+
+                        try {
+                                const emps = await MainDB.getmenual("tblcafe_employees", new _Employees(), []);
+                                for (let emp of (emps.ResultData || [])) {
+                                        let arr = emp.activeorders || [];
+                                        let newArr = arr.filter(o => o.customerid.toString() !== order.customerid.toString());
+                                        if (arr.length !== newArr.length) {
+                                                await MainDB.Update("tblcafe_employees", new _Employees(), [{ _id: new ObjectId(emp._id) }, { activeorders: newArr }]);
+                                        }
+                                }
+                        } catch(unassignErr) {
+                                console.error("Error unassigning:", unassignErr);
+                        }
 
                         ResponseBody.status = UpdatePayment.status
                         ResponseBody.message =
@@ -372,6 +486,19 @@ class AddToCart {
                                         { _id: new ObjectId(req.body._id) },
                                         { bill: uploaded }
                                 ]);
+                        }
+
+                        try {
+                                const emps = await MainDB.getmenual("tblcafe_employees", new _Employees(), []);
+                                for (let emp of (emps.ResultData || [])) {
+                                        let arr = emp.activeorders || [];
+                                        let newArr = arr.filter(o => o.customerid.toString() !== req.body.customerid.toString());
+                                        if (arr.length !== newArr.length) {
+                                                await MainDB.Update("tblcafe_employees", new _Employees(), [{ _id: new ObjectId(emp._id) }, { activeorders: newArr }]);
+                                        }
+                                }
+                        } catch(unassignErr) {
+                                console.error("Error unassigning:", unassignErr);
                         }
 
                         ResponseBody.status = verifypayment.status

@@ -596,9 +596,7 @@ class Methods {
         }
 
         getdatetimestr() {
-                return new Date().toISOString().
-                        replace(/T/, ' ').      // replace T with a space
-                        replace(/\..+/, '')
+                return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
         }
 
         generateRandomString(length) {
