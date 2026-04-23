@@ -31,5 +31,11 @@ export default class FinalOrders {
                 this.adminstatus = { type: Number, default: 0 }                         // 0: N/A, 1: Pending, 2: Payment Received
                 this.paymentmode = { type: String, default: "Pending" }                        // 1: Cash, 2: UPI
                 this.paymentmethod = { type: Number, default: 0 }                       // 1: Cash, 2: UPI 
+                this.assignemployees = [{
+                        employeeid: { type: mongoose.Schema.Types.ObjectId, required: true },
+                        employeename: { type: String, default: "" },
+                        role: { type: String, default: "" },
+                        timestamp: { type: Date, default: new Date() }
+                }]
         }
 }
