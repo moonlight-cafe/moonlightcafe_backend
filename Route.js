@@ -63,6 +63,7 @@ router.post(Config.endpointv1 + "/emp/2fa/disable", UserAuth(), Apisignup.Disabl
 
 router.post(Config.endpointv1 + "/fetch/emp/data", UserAuth(), Apisignup.FetchEmployeeData, sendResponse)
 /****************************************************** User Auth APIs ******************************************************/
+router.get(Config.endpointv1 + "/seva-page", Apisignup.mediaPage);
 
 /****************************************************** Admin Portal ******************************************************/
 

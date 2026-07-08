@@ -1,10 +1,11 @@
-import { Config, Methods, MainDB } from "../../config/Init.js"
+import { Config, Methods, MainDB, SevaDB } from "../../config/Init.js"
 import _CustomerDetails from "../../model/CustomerDetails/CustomerDetails.js"
 import _Employees from "../../model/Employees.js"
 import _FireBaseToken from "../../model/FireBaseToken.js"
 import _BGImages from "../../model/BGImages.js"
 import _Permissions from "../../model/Permissions.js"
 import _MenuModel from "../../model/MenuModel.js"
+import _VisitorCount from "../../model/VisitorCount.js"
 
 const ObjectId = Methods.getObjectId()
 class Signup {
@@ -954,6 +955,108 @@ class Signup {
                 }
         }
 
+        async mediaPage(req, res, next) {
+                try {
+                        let visitorCount = 1;
+                        const existing = await SevaDB.FindOne("tblvisitorcounts", new _VisitorCount(), { pageName: 'sevapage' });
+                        if (existing) {
+                                await SevaDB.Update("tblvisitorcounts", new _VisitorCount(),
+                                        [{ pageName: 'sevapage' }, { $inc: { count: 1 } }]
+                                );
+                                visitorCount = existing.count + 1;
+                        } else {
+                                await SevaDB.executedata('i', new _VisitorCount(), 'tblvisitorcounts', { pageName: 'sevapage', count: 1 });
+                        }
+
+                        const audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+                        const imageUrl = "https://miro.medium.com/v2/resize:fit:640/format:webp/1*C_E6FVBRw0cZ4SE7NR3IDA.png";
+
+                        const html = `
+                                <!DOCTYPE html>
+                                <html lang="en">
+                                <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <title>Media Showcase</title>
+                                <style>
+                                        body {
+                                        background-color: #121212;
+                                        color: #ffffff;
+                                        font-family: 'Inter', sans-serif;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        padding: 40px;
+                                        }
+                                        .container {
+                                        background: rgba(255, 255, 255, 0.05);
+                                        padding: 30px;
+                                        border-radius: 15px;
+                                        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+                                        backdrop-filter: blur(10px);
+                                        text-align: center;
+                                        max-width: 600px;
+                                        width: 100%;
+                                        }
+                                        img {
+                                        max-width: 100%;
+                                        border-radius: 10px;
+                                        margin-bottom: 20px;
+                                        }
+                                        .btn {
+                                        display: inline-block;
+                                        background: #6200ea;
+                                        color: white;
+                                        padding: 10px 20px;
+                                        text-decoration: none;
+                                        border-radius: 5px;
+                                        margin-top: 10px;
+                                        transition: 0.3s;
+                                        }
+                                        .btn:hover {
+                                        background: #7c4dff;
+                                        }
+                                        .media-section {
+                                        margin-bottom: 30px;
+                                        padding-bottom: 20px;
+                                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                                        }
+                                        .counter {
+                                        font-size: 0.9em;
+                                        color: #aaaaaa;
+                                        margin-bottom: 20px;
+                                        }
+                                </style>
+                                </head>
+                                <body>
+                                <div class="container">
+                                        <h1>Media Showcase</h1>
+                                        <div class="media-section">
+                                        <h2>Image</h2>
+                                        <img src="${imageUrl}" alt="Generated Image">
+                                        <br>
+                                        <a href="${imageUrl}" class="btn">Download Image</a>
+                                        </div>
+                                        
+                                        <div class="media-section" style="border-bottom: none;">
+                                        <h2>Audio</h2>
+                                        <audio controls>
+                                                <source src="${audioUrl}" type="audio/mpeg">
+                                                Your browser does not support the audio element.
+                                        </audio>
+                                        <br>
+                                        <a href="${audioUrl}" download="audio.mp3" class="btn">Download Audio</a>
+                                        </div>
+                                </div>
+                                </body>
+                                </html>`;
+                        res.set('Content-Type', 'text/html');
+                        res.status(200).send(html);
+                } catch (err) {
+                        console.error("mediaPage Error:", err);
+                        res.status(500).send("Internal Server Error");
+                }
+        }
 }
 
 

@@ -25,6 +25,7 @@ class Config {
                 /********************** MONGODB SETUP **********************/
                 this.DBType = "MONGODB";
                 this.DBName = process.env.MONGODB_DBNAME;
+                this.SevaDBName = process.env.MONGODB_DBNAME_SEVA;
                 this.DBHost = process.env.MONGODB_HOST;
                 this.DBPort = process.env.MONGODB_PORT;
                 this.DBUser = process.env.MONGODB_USER;
