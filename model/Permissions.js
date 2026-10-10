@@ -12,5 +12,6 @@ export default class Permissions {
                 this.insert = { type: Number, default: 1 }
                 this.update = { type: Number, default: 1 }
                 this.delete = { type: Number, default: 1 }
+                this.status = { type: Number, default: 1 }
         }
 }

@@ -703,8 +703,19 @@ export default class Employees {
                                         [{ _id: new ObjectId(_id), receiverid: new ObjectId(uid) }, { read: 1 }]
                                 )
 
+                                const unreadCountResp = await MainDB.getmenual(
+                                        "tblcafe_notification",
+                                        new _Notification(),
+                                        [{ $match: { receiverid: new ObjectId(uid), read: 0 } }, { $count: "count" }]
+                                )
+                                let hasUnreadNotifications = false;
+                                if (unreadCountResp.ResultData && unreadCountResp.ResultData.length > 0) {
+                                        hasUnreadNotifications = unreadCountResp.ResultData[0].count > 0;
+                                }
+
                                 ResponseBody.status = updatedata.status
                                 ResponseBody.message = updatedata.status === 200 ? "Notification marked as read." : updatedata.message
+                                ResponseBody.hasUnreadNotifications = hasUnreadNotifications
                                 req.ResponseBody = ResponseBody
                                 return next()
                         }
@@ -718,7 +729,8 @@ export default class Employees {
                         req.ResponseBody = {
                                 status: 200,
                                 message: "All notifications marked as read.",
-                                modifiedcount: updatemany.modifiedCount
+                                modifiedcount: updatemany.modifiedCount,
+                                hasUnreadNotifications: false
                         }
                         return next()
                 } catch (error) {

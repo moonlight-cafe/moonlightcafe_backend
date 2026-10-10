@@ -1,5 +1,8 @@
 import { Config, Methods, MainDB, cloudinary } from "../../config/Init.js";
-import _CustomerDetails from "../../model/CustomerDetails/CustomerDetails.js"
+import _CustomerDetails from "../../model/CustomerDetails/CustomerDetails.js";
+import _FinalOrders from "../../model/FinalOrders.js";
+import _FavoriteModel from "../../model/FavoriteModel.js";
+import _FoodItems from "../../model/FoodItems.js";
 
 const ObjectId = Methods.getObjectId();
 
@@ -237,6 +240,155 @@ class CustomerAction {
 
                 } catch (error) {
                         console.error(error);
+                        req.ResponseBody = {
+                                status: 500,
+                                message: "Internal Server Error"
+                        };
+                        next();
+                }
+        }
+
+        async GetCustomerFullSummary(req, res, next) {
+                try {
+                        const customerIdStr = req.body.customerid || req.body._id;
+                        if (!customerIdStr) {
+                                req.ResponseBody = {
+                                        status: 400,
+                                        message: "Customer ID is required."
+                                };
+                                return next();
+                        }
+
+                        const customerObjId = new ObjectId(customerIdStr);
+
+                        // 1. Fetch Customer Details
+                        const customerData = await MainDB.getmenual("tblcafe_customerdetails", new _CustomerDetails(), [
+                                { $match: { _id: customerObjId } }
+                        ]);
+
+                        if (!customerData.ResultData || customerData.ResultData.length === 0) {
+                                req.ResponseBody = {
+                                        status: 404,
+                                        message: "Customer not found."
+                                };
+                                return next();
+                        }
+
+                        const customer = { ...customerData.ResultData[0] };
+                        if (customer.password) delete customer.password;
+
+                        // 2. Orders Stats (Total orders, Total revenue)
+                        const orderStatsPipeline = [
+                                { $match: { customerid: customerObjId } },
+                                {
+                                        $group: {
+                                                _id: null,
+                                                totalOrders: { $sum: 1 },
+                                                totalRevenue: {
+                                                        $sum: {
+                                                                $cond: [
+                                                                        { $ne: ["$adminstatus", 3] }, // Exclude cancelled orders from revenue
+                                                                        { $ifNull: ["$totalamount", { $ifNull: ["$amount", 0] }] },
+                                                                        0
+                                                                ]
+                                                        }
+                                                }
+                                        }
+                                }
+                        ];
+                        const orderStatsRes = await MainDB.getmenual("tblcafe_finalorders", new _FinalOrders(), orderStatsPipeline);
+                        const stats = (orderStatsRes.ResultData && orderStatsRes.ResultData[0]) ? orderStatsRes.ResultData[0] : { totalOrders: 0, totalRevenue: 0 };
+
+                        // Fetch Last Order Date
+                        const lastOrderRes = await MainDB.getmenual("tblcafe_finalorders", new _FinalOrders(), [
+                                { $match: { customerid: customerObjId } },
+                                { $sort: { _id: -1 } },
+                                { $limit: 1 }
+                        ]);
+
+                        let lastOrderDate = null;
+                        if (lastOrderRes.ResultData && lastOrderRes.ResultData.length > 0) {
+                                const lastOrd = lastOrderRes.ResultData[0];
+                                lastOrderDate = lastOrd.createdAt || lastOrd.createddate || lastOrd.create_at || (lastOrd._id ? lastOrd._id.getTimestamp() : null);
+                        }
+
+                        // 3. Top 3 Common Food Items
+                        const topItemsPipeline = [
+                                { $match: { customerid: customerObjId } },
+                                { $unwind: "$data" },
+                                {
+                                        $group: {
+                                                _id: "$data.foodid",
+                                                foodname: { $first: "$data.foodname" },
+                                                imageurl: { $first: "$data.imageurl" },
+                                                price: { $first: "$data.price" },
+                                                foodcode: { $first: "$data.foodcode" },
+                                                totalQuantity: { $sum: { $ifNull: ["$data.quantity", 1] } },
+                                                orderCount: { $sum: 1 }
+                                        }
+                                },
+                                { $sort: { totalQuantity: -1, orderCount: -1 } },
+                                { $limit: 3 }
+                        ];
+                        const topItemsRes = await MainDB.getmenual("tblcafe_finalorders", new _FinalOrders(), topItemsPipeline);
+                        
+                        let topItems = topItemsRes.ResultData || [];
+                        if (topItems.length > 0) {
+                                const foodIds = topItems.map(item => item._id).filter(Boolean);
+                                if (foodIds.length > 0) {
+                                        const freshFoodsRes = await MainDB.getmenual("tblcafe_fooditems", new _FoodItems(), [
+                                                { $match: { _id: { $in: foodIds.map(id => new ObjectId(id)) } } }
+                                        ]);
+                                        const freshFoodMap = {};
+                                        (freshFoodsRes.ResultData || []).forEach(f => {
+                                                freshFoodMap[f._id.toString()] = f;
+                                        });
+                                        topItems = topItems.map(item => {
+                                                const foodIdKey = item._id ? item._id.toString() : "";
+                                                const fresh = freshFoodMap[foodIdKey];
+                                                return {
+                                                        foodid: item._id,
+                                                        foodname: (fresh && fresh.name) ? fresh.name : item.foodname,
+                                                        imageurl: (fresh && fresh.url) ? fresh.url : item.imageurl,
+                                                        price: (fresh && fresh.price) ? fresh.price : item.price,
+                                                        totalQuantity: item.totalQuantity,
+                                                        orderCount: item.orderCount
+                                                };
+                                        });
+                                }
+                        }
+
+                        // 4. Favorite Food Items
+                        const favRes = await MainDB.getmenual("tblcafe_favorites", new _FavoriteModel(), [
+                                { $match: { customerid: customerObjId } }
+                        ]);
+                        let favoriteItems = [];
+                        if (favRes.ResultData && favRes.ResultData.length > 0) {
+                                const favFoodIds = favRes.ResultData.map(f => new ObjectId(f.foodid));
+                                const favFoodsRes = await MainDB.getmenual("tblcafe_fooditems", new _FoodItems(), [
+                                        { $match: { _id: { $in: favFoodIds } } }
+                                ]);
+                                favoriteItems = favFoodsRes.ResultData || [];
+                        }
+
+                        req.ResponseBody = {
+                                status: 200,
+                                message: "Customer summary fetched successfully.",
+                                data: {
+                                        customer,
+                                        stats: {
+                                                totalOrders: stats.totalOrders || 0,
+                                                totalRevenue: stats.totalRevenue || 0,
+                                                lastOrderDate: lastOrderDate
+                                        },
+                                        topItems,
+                                        favoriteItems
+                                }
+                        };
+                        next();
+
+                } catch (error) {
+                        console.error("Error in GetCustomerFullSummary:", error);
                         req.ResponseBody = {
                                 status: 500,
                                 message: "Internal Server Error"

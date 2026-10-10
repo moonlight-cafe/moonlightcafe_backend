@@ -90,6 +90,7 @@ class AddToCart {
                         const newCart = {
                                 customerid: customerid,
                                 data: req.body.data,
+                                amount: req.body.totalamount,
                                 totalamount: req.body.totalamount,
                                 servicetype: servicetype,
                                 includetip: req.body.includetip,
@@ -181,8 +182,7 @@ class AddToCart {
                                         order.data.forEach(item => {
                                                 const price = parseFloat(item.price || 0)
                                                 const qty = parseInt(item.quantity || 1)
-
-                                                subtotal += price
+                                                subtotal += price * qty
 
                                                 newData.push({
                                                         foodid: item.foodid,
@@ -356,7 +356,7 @@ class AddToCart {
                         /* ========================================================== */
 
                         try {
-                                const emps = await MainDB.getmenual("tblcafe_employees", new _Employees(), []);
+                                const emps = await MainDB.getmenual("tblcafe_employees", new _Employees(), [{ $match: {} }]);
                                 for (let emp of (emps.ResultData || [])) {
                                         let arr = emp.activeorders || [];
                                         let newArr = arr.filter(o => o.customerid.toString() !== order.customerid.toString());
@@ -364,7 +364,7 @@ class AddToCart {
                                                 await MainDB.Update("tblcafe_employees", new _Employees(), [{ _id: new ObjectId(emp._id) }, { activeorders: newArr }]);
                                         }
                                 }
-                        } catch(unassignErr) {
+                        } catch (unassignErr) {
                                 console.error("Error unassigning:", unassignErr);
                         }
 
@@ -479,7 +479,7 @@ class AddToCart {
 
                         await MainDB.sendMail('', [customerdetails.data.email], template, '', senddata);
 
-                        const uploaded = await Methods.GenerateBillPDF(senddata)
+                        const uploaded = await Methods.GenerateBillHTML(senddata)
 
                         if (uploaded !== "") {
                                 await MainDB.Update("tblcafe_finalorders", new _FinalOrders(), [
@@ -489,7 +489,7 @@ class AddToCart {
                         }
 
                         try {
-                                const emps = await MainDB.getmenual("tblcafe_employees", new _Employees(), []);
+                                const emps = await MainDB.getmenual("tblcafe_employees", new _Employees(), [{ $match: { activeorders: { $exists: true } } }]);
                                 for (let emp of (emps.ResultData || [])) {
                                         let arr = emp.activeorders || [];
                                         let newArr = arr.filter(o => o.customerid.toString() !== req.body.customerid.toString());
@@ -497,7 +497,7 @@ class AddToCart {
                                                 await MainDB.Update("tblcafe_employees", new _Employees(), [{ _id: new ObjectId(emp._id) }, { activeorders: newArr }]);
                                         }
                                 }
-                        } catch(unassignErr) {
+                        } catch (unassignErr) {
                                 console.error("Error unassigning:", unassignErr);
                         }
 

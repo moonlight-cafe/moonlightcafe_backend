@@ -1,4 +1,4 @@
-import { Config, Methods, MainDB, SevaDB } from "../../config/Init.js"
+import { Config, Methods, MainDB } from "../../config/Init.js"
 import _CustomerDetails from "../../model/CustomerDetails/CustomerDetails.js"
 import _Employees from "../../model/Employees.js"
 import _FireBaseToken from "../../model/FireBaseToken.js"
@@ -6,6 +6,8 @@ import _BGImages from "../../model/BGImages.js"
 import _Permissions from "../../model/Permissions.js"
 import _MenuModel from "../../model/MenuModel.js"
 import _VisitorCount from "../../model/VisitorCount.js"
+import _Userroles from "../../model/Userroles.js"
+import _Notification from "../../model/Notification.js"
 
 const ObjectId = Methods.getObjectId()
 class Signup {
@@ -55,9 +57,14 @@ class Signup {
                                         return next()
                                 }
                                 uid = resp.ResultData[0]._id
-                                var token = await MainDB.getjwt(uid, unqkey, iss, req.headers['user-agent'], aud)
+                                var exph = (req.headers.rememberme === 'true' || req.headers.rememberme === true) ? "7d" : "10h";
+                                var token = await MainDB.getjwt(uid, unqkey, iss, req.headers['user-agent'], aud, exph)
 
-                                ResponseBody.status = 200
+                                const activeMenusResp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [{ $match: { isactive: 1 } }, { $sort: { displayorder: 1 } }]);
+			const activeMenus = activeMenusResp?.ResultData || [];
+			ResponseBody.menus = activeMenus;
+			ResponseBody.menudetails = activeMenus;
+			ResponseBody.status = 200
                                 ResponseBody.message = Config.getResponsestatuscode()['200']
                                 ResponseHeaders.token = token
                                 ResponseHeaders.iss = iss
@@ -114,7 +121,8 @@ class Signup {
                                         return next()
                                 }
                                 uid = resp.ResultData[0]._id
-                                var token = await MainDB.getjwt(uid, unqkey, iss, req.headers['user-agent'], aud)
+                                var exph = (req.headers.rememberme === 'true' || req.headers.rememberme === true) ? "7d" : "10h";
+                                var token = await MainDB.getjwt(uid, unqkey, iss, req.headers['user-agent'], aud, exph)
 
                                 ResponseBody.status = 200
                                 ResponseBody.message = Config.getResponsestatuscode()['200']
@@ -882,13 +890,23 @@ class Signup {
                                         new _Employees(),
                                         [{ $match: { _id: uidObj } }, {
                                                 $project: {
-                                                        _id: 1, employeeid: 1, name: 1, number: 1, email: 1, role: 1, roleid: 1, twoFactorEnabled: 1,
+                                                        _id: 1, employeeid: 1, name: 1, fname: 1, lname: 1, number: 1, email: 1, role: 1, roleid: 1, twoFactorEnabled: 1, darkmodeaccess: 1, status: 1
                                                 }
                                         }]
                                 )
-                                employee = employeeResp.ResultData[0] || {}
-                                if (employee) {
-                                        if (employee.roleid.toString() == Config.superadminroleid.toString()) {
+                                employee = employeeResp.ResultData[0];
+                                if (employee && Object.keys(employee).length > 0) {
+                                        if (employee.roleid) {
+                                                const roleResp = await MainDB.getmenual(
+                                                        "tblcafe_userroles",
+                                                        new _Userroles(),
+                                                        [{ $match: { _id: new ObjectId(employee.roleid) } }]
+                                                );
+                                                if (roleResp?.ResultData?.length > 0) {
+                                                        employee.role = roleResp.ResultData[0].role;
+                                                }
+                                        }
+                                        if (employee.roleid && Config.superadminroleid && employee.roleid.toString() == Config.superadminroleid.toString()) {
                                                 const menuresp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [{ $match: { isactive: 1 } }, { $sort: { displayorder: 1 } }])
                                                 const menus = menuresp.ResultData
                                                 const superPerms = menus.map((menu) => ({
@@ -902,9 +920,10 @@ class Signup {
                                                         insert: 1,
                                                         update: 1,
                                                         delete: 1,
+                                                        status: 1
                                                 }))
                                                 permission = superPerms
-                                        } else {
+                                        } else if (employee.roleid) {
                                                 const empRightsResp = await MainDB.getmenual(
                                                         "tblcafe_permissions",
                                                         new _Permissions(),
@@ -912,7 +931,7 @@ class Signup {
                                                 )
                                                 const empRights = empRightsResp.ResultData || []
                                                 permission = empRights
-                                                if (!permission.length && employee.roleid) {
+                                                if (!permission.length) {
                                                         const roleRightsResp = await MainDB.getmenual(
                                                                 "tblcafe_permissions",
                                                                 new _Permissions(),
@@ -922,139 +941,86 @@ class Signup {
                                                         permission = roleRights
                                                 }
                                         }
+                                } else {
+                                        const custResp = await MainDB.getmenual(
+                                                "tblcafe_customerdetails",
+                                                new _CustomerDetails(),
+                                                [{ $match: { _id: uidObj } }, {
+                                                        $project: {
+                                                                _id: 1, name: 1, number: 1, email: 1, darkmodeaccess: 1, tblno: 1, redirecturl: 1
+                                                        }
+                                                }]
+                                        );
+                                        if (custResp.ResultData.length > 0) {
+                                                employee = custResp.ResultData[0];
+                                        } else {
+                                                employee = {};
+                                        }
                                 }
                         }
-                        if (!permission.length) {
-                                const menuresp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [{ $match: { isactive: 1, defaultpermission: 1 } }, { $sort: { displayorder: 1 } }])
-                                const menus = menuresp.ResultData
-                                const defaultmenus = menus.map((menu) => ({
-                                        _id: new ObjectId(),
-                                        roleid: employee.roleid,
-                                        employeeid: employee._id,
-                                        menu_id: menu._id,
-                                        menu_name: menu.name,
-                                        menu_alias: menu.redirecturl || menu.name,
-                                        view: 1,
-                                        insert: 1,
-                                        update: 1,
-                                        delete: 1,
-                                }))
-                                permission = defaultmenus
+
+                        let hasUnreadNotifications = false;
+                        if (employee?._id) {
+                                const unreadCountResp = await MainDB.getmenual(
+                                        "tblcafe_notification",
+                                        new _Notification(),
+                                        [{ $match: { receiverid: new ObjectId(employee._id), read: 0 } }, { $count: "count" }]
+                                );
+                                if (unreadCountResp.ResultData && unreadCountResp.ResultData.length > 0) {
+                                        hasUnreadNotifications = unreadCountResp.ResultData[0].count > 0;
+                                }
+                                employee.hasUnreadNotifications = hasUnreadNotifications;
                         }
-                        ResponseBody.status = 200
-                        ResponseBody.message = "Success"
-                        ResponseBody.data = employee
-                        ResponseBody.bgimgs = bgimgs.ResultData.map(data => data.url)
-                        ResponseBody.permission = permission
-                        req.ResponseBody = ResponseBody
-                        next()
+
+                        const allActiveMenusResp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [{ $match: { isactive: 1 } }, { $sort: { displayorder: 1 } }]);
+			const allActiveMenus = allActiveMenusResp?.ResultData || [];
+
+			if (!permission.length && employee?.roleid) {
+				const defaultmenus = allActiveMenus.filter(m => m.defaultpermission === 1).map((menu) => ({
+					_id: new ObjectId(),
+					roleid: employee.roleid,
+					employeeid: employee._id,
+					menu_id: menu._id,
+					menu_name: menu.name,
+					menu_alias: menu.redirecturl || menu.name,
+					view: 1,
+					insert: 1,
+					update: 1,
+					delete: 1,
+					status: 1
+				}));
+				permission = defaultmenus;
+			} else if (permission.length && allActiveMenus.length) {
+				const menuMap = {};
+				allActiveMenus.forEach(m => {
+					menuMap[m._id.toString()] = m;
+				});
+				permission = permission.map(p => {
+					const matched = p.menu_id ? menuMap[p.menu_id.toString()] : null;
+					if (matched) {
+						return {
+							...p,
+							menu_name: matched.name,
+							menu_alias: matched.redirecturl || p.menu_alias
+						};
+					}
+					return p;
+				});
+			}
+
+			ResponseBody.status = 200;
+			ResponseBody.message = "Success";
+			ResponseBody.data = employee;
+			ResponseBody.bgimgs = bgimgs.ResultData.map(data => data.url);
+			ResponseBody.permission = permission;
+			ResponseBody.menus = allActiveMenus;
+			ResponseBody.menudata = allActiveMenus;
+			req.ResponseBody = ResponseBody;
+			next()
                 } catch (error) {
                         console.log("🚀 ~ Signup.js:667 ~ Signup ~ LoginData ~ error>>", error);
                         req.ResponseBody = { status: 500, message: "Internal Server Error" }
                         next()
-                }
-        }
-
-        async mediaPage(req, res, next) {
-                try {
-                        let visitorCount = 1;
-                        const existing = await SevaDB.FindOne("tblvisitorcounts", new _VisitorCount(), { pageName: 'sevapage' });
-                        if (existing) {
-                                await SevaDB.Update("tblvisitorcounts", new _VisitorCount(),
-                                        [{ pageName: 'sevapage' }, { $inc: { count: 1 } }]
-                                );
-                                visitorCount = existing.count + 1;
-                        } else {
-                                await SevaDB.executedata('i', new _VisitorCount(), 'tblvisitorcounts', { pageName: 'sevapage', count: 1 });
-                        }
-
-                        const audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-                        const imageUrl = "https://miro.medium.com/v2/resize:fit:640/format:webp/1*C_E6FVBRw0cZ4SE7NR3IDA.png";
-
-                        const html = `
-                                <!DOCTYPE html>
-                                <html lang="en">
-                                <head>
-                                <meta charset="UTF-8">
-                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                <title>Media Showcase</title>
-                                <style>
-                                        body {
-                                        background-color: #121212;
-                                        color: #ffffff;
-                                        font-family: 'Inter', sans-serif;
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
-                                        padding: 40px;
-                                        }
-                                        .container {
-                                        background: rgba(255, 255, 255, 0.05);
-                                        padding: 30px;
-                                        border-radius: 15px;
-                                        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-                                        backdrop-filter: blur(10px);
-                                        text-align: center;
-                                        max-width: 600px;
-                                        width: 100%;
-                                        }
-                                        img {
-                                        max-width: 100%;
-                                        border-radius: 10px;
-                                        margin-bottom: 20px;
-                                        }
-                                        .btn {
-                                        display: inline-block;
-                                        background: #6200ea;
-                                        color: white;
-                                        padding: 10px 20px;
-                                        text-decoration: none;
-                                        border-radius: 5px;
-                                        margin-top: 10px;
-                                        transition: 0.3s;
-                                        }
-                                        .btn:hover {
-                                        background: #7c4dff;
-                                        }
-                                        .media-section {
-                                        margin-bottom: 30px;
-                                        padding-bottom: 20px;
-                                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                                        }
-                                        .counter {
-                                        font-size: 0.9em;
-                                        color: #aaaaaa;
-                                        margin-bottom: 20px;
-                                        }
-                                </style>
-                                </head>
-                                <body>
-                                <div class="container">
-                                        <h1>Media Showcase</h1>
-                                        <div class="media-section">
-                                        <h2>Image</h2>
-                                        <img src="${imageUrl}" alt="Generated Image">
-                                        <br>
-                                        <a href="${imageUrl}" class="btn">Download Image</a>
-                                        </div>
-                                        
-                                        <div class="media-section" style="border-bottom: none;">
-                                        <h2>Audio</h2>
-                                        <audio controls>
-                                                <source src="${audioUrl}" type="audio/mpeg">
-                                                Your browser does not support the audio element.
-                                        </audio>
-                                        <br>
-                                        <a href="${audioUrl}" download="audio.mp3" class="btn">Download Audio</a>
-                                        </div>
-                                </div>
-                                </body>
-                                </html>`;
-                        res.set('Content-Type', 'text/html');
-                        res.status(200).send(html);
-                } catch (err) {
-                        console.error("mediaPage Error:", err);
-                        res.status(500).send("Internal Server Error");
                 }
         }
 }

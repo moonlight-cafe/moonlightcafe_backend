@@ -29,6 +29,7 @@
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "express-fileupload": "^1.5.1",
+    "express-rate-limit": "^8.7.0",
     "firebase-admin": "^13.6.0",
     "fs": "^0.0.1-security",
     "googleapis": "^171.4.0",
@@ -40,6 +41,7 @@
     "nodemailer": "^7.0.13",
     "path": "^0.12.7",
     "pdfkit": "^0.17.2",
+    "razorpay": "^2.9.8",
     "streamifier": "^0.1.1"
   }
 }
