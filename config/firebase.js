@@ -39,16 +39,16 @@ firebaseAdminobj.sendMulticastNotification = async function (payload) {
                 notification: {
                         title: payload.title,
                         body: payload.body,
-                        // image: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1757447223/Monlight_Cafe_Green_qbzvfd.png" // big banner (optional)
+                        // image: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1777053163/MoonlightCafeLogoSquare_47d9a8_u9de0b.png" // big banner (optional)
                         // image: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1749141918/tempfolder/gmd4nf2stova0qct7h3o.png"
                 },
 
                 // ✅ THIS IS WHAT SHOWS THE LOGO
                 webpush: {
                         notification: {
-                                icon: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1757447223/Monlight_Cafe_Green_qbzvfd.png",
-                                badge: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1757447223/Monlight_Cafe_Green_qbzvfd.png",
-                                click_action: payload.clickaction || "/"
+                                icon: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1777053163/MoonlightCafeLogoSquare_47d9a8_u9de0b.png",
+                                badge: "https://res.cloudinary.com/dqdv99ydb/image/upload/v1777053163/MoonlightCafeLogoSquare_47d9a8_u9de0b.png",
+                                click_action: payload.data?.clickaction || "/"
                         }
                 },
 

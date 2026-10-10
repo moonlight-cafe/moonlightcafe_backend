@@ -22,6 +22,11 @@ class Config {
                         dineintax: 5,
                         takeawaytax: 10
                 }
+
+                /********************** RAZORPAY SETUP **********************/
+                this.razorpay_key_id = process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder";
+                this.razorpay_secret = process.env.RAZORPAY_SECRET || "rzp_test_secret_placeholder";
+                /********************** RAZORPAY SETUP **********************/
                 /********************** MONGODB SETUP **********************/
                 this.DBType = "MONGODB";
                 this.DBName = process.env.MONGODB_DBNAME;

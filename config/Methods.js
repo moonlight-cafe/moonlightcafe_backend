@@ -237,318 +237,338 @@ class Methods {
                 }
         }
 
-        /* ================== GENERATE + UPLOAD BILL PDF ================== */
-        async GenerateBillPDF(orderData) {
+        /* ================== GENERATE + UPLOAD BILL HTML ================== */
+        async GenerateBillHTML(orderData) {
                 try {
-                        return await new Promise((resolve, reject) => {
-                                const doc = new PDFDocument({
-                                        size: 'A4',
-                                        margins: { top: 40, bottom: 40, left: 50, right: 50 },
-                                        bufferPages: true
-                                });
+                        const logoPath = path.join(process.cwd(), 'assets', 'logo.png');
+                        let logoHtml = '';
+                        if (fs.existsSync(logoPath)) {
+                                const logoData = fs.readFileSync(logoPath).toString('base64');
+                                logoHtml = `<img src="data:image/png;base64,${logoData}" alt="Moonlight Cafe Logo" class="brand-logo" />`;
+                        }
 
-                                const buffers = [];
-                                doc.on('data', buffers.push.bind(buffers));
-                                doc.on('end', async () => {
-                                        try {
-                                                const pdfBuffer = Buffer.concat(buffers);
-                                                const uploadResult = await new Promise((res, rej) => {
-                                                        cloudinary.uploader.upload_stream(
-                                                                {
-                                                                        folder: "bills",
-                                                                        resource_type: "raw",
-                                                                        public_id: orderData.ordno,
-                                                                        format: "pdf",
-                                                                        use_filename: true,
-                                                                        unique_filename: false,
-                                                                        overwrite: true,
-                                                                        access_mode: "public"
-                                                                },
-                                                                (error, result) => {
-                                                                        if (error) rej(error);
-                                                                        else res(result);
-                                                                }
-                                                        ).end(pdfBuffer);
-                                                });
-                                                resolve(uploadResult.secure_url);
-                                        } catch (err) {
-                                                reject(err);
+                        const brandTextPath = path.join(process.cwd(), '..', 'admin_portal', 'src', 'assets', 'MoonlightCafeText.png');
+                        let brandTextHtml = `<h1 class="brand-name">Moonlight Cafe</h1>`;
+                        if (fs.existsSync(brandTextPath)) {
+                                const brandTextData = fs.readFileSync(brandTextPath).toString('base64');
+                                brandTextHtml = `<img src="data:image/png;base64,${brandTextData}" alt="Moonlight Cafe" style="max-height: 38px; margin-top: 5px;" />`;
+                        }
+
+                        const itemsHtml = (orderData.data || []).map((item, idx) => {
+                                const priceNum = String(item.price).replace(/₹/g, '').replace(/Rs\./g, '').trim();
+                                const rowTotal = (parseFloat(priceNum) * item.quantity).toFixed(2);
+                                return `
+                        <tr class="${idx % 2 === 0 ? 'even' : ''}">
+                                <td style="text-align: left;">${item.foodname}</td>
+                                <td class="right">₹ ${priceNum}</td>
+                                <td class="center">${item.quantity}</td>
+                                <td class="right">₹ ${rowTotal}</td>
+                        </tr>
+                        `;
+                        }).join('');
+
+                        const htmlString = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice #${orderData.ordno}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #eceef1;
+            --ink-soft: #93999f;
+            --line: #2a2e35;
+            --accent: #4fae94;
+            --accent-soft: #182420;
+            --paper: #16181c;
+            --canvas: #0b0c0e;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, Segoe UI, Roboto, sans-serif;
+            margin: 0;
+            padding: 48px 20px;
+            background-color: var(--canvas);
+            color: var(--ink);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        .invoice-wrapper {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(16, 24, 32, 0.06), 0 8px 24px rgba(16, 24, 32, 0.04);
+            max-width: 820px;
+            width: 100%;
+            overflow: hidden;
+            margin: auto;
+        }
+        .invoice-header {
+            padding: 22px 56px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo { max-width: 64px; margin-bottom: 0; display: block; }
+        .brand-text { display: flex; flex-direction: column; }
+        .brand-name {
+            margin: 0;
+            color: var(--ink);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .brand p {
+            margin: 2px 0 0 0;
+            font-size: 11px;
+            color: var(--ink-soft);
+            line-height: 1.4;
+        }
+        .invoice-meta { text-align: right; }
+        .invoice-meta h2 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            color: var(--accent);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .invoice-meta p {
+            margin: 0;
+            color: var(--ink);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .invoice-meta .date {
+            font-size: 11px;
+            color: var(--ink-soft);
+            margin-top: 3px;
+            font-weight: 400;
+        }
+        .invoice-body { padding: 36px 56px 15px 56px; }
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            background: var(--accent-soft);
+            padding: 26px 32px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            margin-bottom: 10px;
+            margin-bottom: 42px;
+        }
+        .detail-group { display: flex; flex-direction: column; gap: 5px; }
+        .detail-label {
+            font-size: 11px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .detail-val {
+            font-size: 15px;
+            color: var(--ink);
+            font-weight: 500;
+            margin: 0;
+        }
+        .table-container {
+            margin: 0 10px 40px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        .items-table th {
+            text-align: left;
+            padding: 14px 20px;
+            color: var(--paper);
+            background: var(--accent);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+        }
+        .items-table th.right { text-align: right; }
+        .items-table th.center { text-align: center; }
+        .items-table td {
+            padding: 16px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--line);
+            color: var(--ink);
+        }
+        .items-table tr.even td { background: #1c1f24; }
+        .items-table td.right { text-align: right; font-weight: 600; }
+        .items-table td.center { text-align: center; color: var(--ink-soft); }
+        .summary-container { display: flex; justify-content: flex-end; margin-right: 10px; margin-bottom: 10px }
+        .summary-box {
+            width: 300px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 22px 24px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            color: var(--ink-soft);
+            font-size: 13px;
+        }
+        .summary-row .val { color: var(--ink); font-weight: 500; }
+        .summary-row.total {
+            margin-top: 8px;
+            padding-top: 14px;
+            border-top: 2px solid var(--accent);
+            color: var(--ink);
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .summary-row.total .val { color: var(--accent); font-size: 19px; }
+        .invoice-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 40px;
+            background: var(--paper);
+            border-top: 1px solid var(--line);
+        }
+        .footer-message {
+            text-align: left;
+        }
+        .footer-message h3 {
+            margin: 0 0 6px 0;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        .footer-message p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 13px;
+        }
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: right;
+        }
+        .contact-item {
+            font-size: 13px;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .contact-item span {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @media print {
+            body { background-color: #fff !important; padding: 0 !important; align-items: flex-start; }
+            .invoice-wrapper { box-shadow: none !important; border: none !important; border-radius: 0; max-width: 100%; }
+            .details-grid { background: #fff !important; border: 1px solid #ddd !important; padding: 20px 25px; border-radius: 8px; box-shadow: none !important; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-wrapper">
+        <div class="invoice-header">
+            <div class="brand">
+                ${logoHtml}
+                <div class="brand-text">
+                    ${brandTextHtml}
+                </div>
+            </div>
+            <div class="invoice-meta">
+                <h2>Invoice</h2>
+                <p>#${orderData.ordno}</p>
+                <div class="date">Date: ${orderData.orddate}</div>
+            </div>
+        </div>
+        <div class="invoice-body">
+            <div class="details-grid">
+                <div class="detail-group"><span class="detail-label">Customer Name</span><p class="detail-val">${orderData.customer || 'Guest'}</p></div>
+                <div class="detail-group"><span class="detail-label">Table Number</span><p class="detail-val">${orderData.tblno}</p></div>
+                <div class="detail-group"><span class="detail-label">Service Type</span><p class="detail-val">${orderData.service}</p></div>
+                <div class="detail-group"><span class="detail-label">Payment Mode</span><p class="detail-val">${orderData.paymentmode}</p></div>
+            </div>
+
+            <div class="table-container">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Item Description</th>
+                            <th class="right">Price</th>
+                            <th class="center">Qty</th>
+                            <th class="right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-container">
+                <div class="summary-box">
+                    <div class="summary-row"><span>Subtotal</span><span class="val">₹ ${String(orderData.amount).replace(/₹/g, '').replace(/Rs\./g, '').trim()}</span></div>
+                    ${orderData.includetip === 1 ? `<div class="summary-row"><span>Tip</span><span class="val">₹ ${String(orderData.tipamount || '0').replace(/₹/g, '').replace(/Rs\./g, '').trim()}</span></div>` : ''}
+                    <div class="summary-row"><span>Tax (${orderData.taxpercent}%)</span><span class="val">₹ ${String(orderData.taxamount).replace(/₹/g, '').replace(/Rs\./g, '').trim()}</span></div>
+                    <div class="summary-row total"><span>Total Amount</span><span class="val">₹ ${String(orderData.totalamount).replace(/₹/g, '').replace(/Rs\./g, '').trim()}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="invoice-footer">
+            <div class="footer-message">
+                <h3>Thank You!</h3>
+                <p>We hope to see you again soon at Moonlight Cafe.</p>
+            </div>
+            <div class="footer-contact">
+                <div class="contact-item"><span>📞</span> +1 (555) 123-4567</div>
+                <div class="contact-item"><span>✉️</span> hello@moonlightcafe.com</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+                        const htmlBuffer = Buffer.from(htmlString, 'utf-8');
+                        const uploadResult = await new Promise((res, rej) => {
+                                cloudinary.uploader.upload_stream(
+                                        {
+                                                folder: "bills",
+                                                resource_type: "raw",
+                                                public_id: orderData.ordno + ".html",
+                                                format: "html",
+                                                use_filename: true,
+                                                unique_filename: false,
+                                                overwrite: true,
+                                                access_mode: "public"
+                                        },
+                                        (error, result) => {
+                                                if (error) rej(error);
+                                                else res(result);
                                         }
-                                });
-
-                                // ── Colors ──────────────────────────────────────────────────
-                                const BG_PAGE = '#1e1e1e';
-                                const BG_CARD = '#2a2a2a';
-                                const BG_INNER = '#1f1f1f';
-                                const BG_HEADER = '#111111';
-                                const ACCENT = '#47d9a8';
-                                const TEXT_LIGHT = '#cccccc';
-                                const TEXT_WHITE = '#ffffff';
-                                const LINE_COL = '#333333';
-                                const RADIUS = 10;
-
-                                const PAGE_W = doc.page.width;
-                                const CARD_X = 50;
-                                const CARD_W = PAGE_W - 100;   // left+right margin = 100
-                                const COL_R_W = 160;            // right-column width for values
-                                const CARD_PAD = 14;             // inner horizontal padding inside each card
-
-                                // ── Helpers ──────────────────────────────────────────────────
-
-                                /** Full-page dark background */
-                                const drawPageBg = () => {
-                                        doc.rect(0, 0, PAGE_W, doc.page.height).fill(BG_PAGE);
-                                };
-
-                                /**
-                                 * Draw a rounded card outline (border only, transparent fill
-                                 * so inner rows are visible on top).
-                                 * Returns the y after the card border is stroked.
-                                 */
-                                const strokeCard = (x, y, w, h, color = ACCENT) => {
-                                        doc.roundedRect(x, y, w, h, RADIUS)
-                                                .lineWidth(1)
-                                                .stroke(color);
-                                };
-
-                                /**
-                                 * Draw a filled rounded rect (used for background fill of a card).
-                                 */
-                                const fillCard = (x, y, w, h, fillColor) => {
-                                        doc.roundedRect(x, y, w, h, RADIUS)
-                                                .fill(fillColor);
-                                };
-
-                                /**
-                                 * Section header row (accent background, dark text, full-width
-                                 * inside the card).  Top corners rounded only.
-                                 */
-                                const drawSectionHeader = (title, x, y, w) => {
-                                        // Rounded top, square bottom → draw as rect + manual top arc
-                                        // Easiest: draw full rounded rect, then cover bottom half corners
-                                        doc.roundedRect(x, y, w, 30, RADIUS).fill(BG_HEADER);
-                                        // Bottom cover to make bottom corners square-ish
-                                        doc.rect(x, y + 15, w, 15).fill(BG_HEADER);
-                                        // Title text
-                                        doc.fillColor(ACCENT)
-                                                .fontSize(12)
-                                                .font('Helvetica-Bold')
-                                                .text(title, x, y + 10, { align: 'center', width: w });
-                                        // Bottom border line
-                                        doc.moveTo(x, y + 30)
-                                                .lineTo(x + w, y + 30)
-                                                .lineWidth(1)
-                                                .stroke(LINE_COL);
-                                        return y + 30;
-                                };
-
-                                /**
-                                 * Draw a single label-value row inside a card.
-                                 * Returns updated y after the row.
-                                 */
-                                const drawRow = (label, value, x, y, w, opts = {}) => {
-                                        const rowH = opts.rowH || 32;          // taller rows = more vertical padding
-                                        const labelColor = opts.labelColor || TEXT_LIGHT;
-                                        const valueColor = opts.valueColor || TEXT_LIGHT;
-                                        const fontSize = opts.fontSize || 11;
-                                        const bold = opts.bold || false;
-
-                                        // Row background
-                                        doc.rect(x, y, w, rowH).fill(BG_INNER);
-
-                                        const textY = y + (rowH - fontSize) / 2 + 1;
-
-                                        // Label — respects left padding
-                                        doc.fillColor(labelColor)
-                                                .fontSize(fontSize)
-                                                .font(bold ? 'Helvetica-Bold' : 'Helvetica')
-                                                .text(label, x + CARD_PAD, textY, {
-                                                        width: w - COL_R_W - CARD_PAD * 2,
-                                                        lineBreak: false
-                                                });
-
-                                        // Value — respects right padding
-                                        doc.fillColor(valueColor)
-                                                .fontSize(fontSize)
-                                                .font(bold ? 'Helvetica-Bold' : 'Helvetica')
-                                                .text(String(value).replace(/₹/g, 'Rs. '),
-                                                        x + w - COL_R_W - CARD_PAD,
-                                                        textY,
-                                                        { width: COL_R_W, align: 'right', lineBreak: false });
-
-                                        return y + rowH;
-                                };
-
-                                /**
-                                 * Draw a horizontal separator line.
-                                 */
-                                const drawLine = (x, y, w) => {
-                                        doc.moveTo(x, y).lineTo(x + w, y).lineWidth(0.5).stroke(LINE_COL);
-                                };
-
-                                // ── Start drawing ────────────────────────────────────────────
-                                drawPageBg();
-
-                                // ─── Outer card background ───────────────────────────────────
-                                // We'll accumulate sections and know total height at the end,
-                                // so draw outer card bg first at full page minus margins.
-                                // (card height is computed section by section)
-
-                                let y = 40;
-
-                                // ─── HEADER (logo area) ──────────────────────────────────────
-                                const headerH = 70;
-                                fillCard(CARD_X, y, CARD_W, headerH, BG_HEADER);
-                                // Bottom border of header
-                                doc.moveTo(CARD_X, y + headerH).lineTo(CARD_X + CARD_W, y + headerH)
-                                        .lineWidth(2).stroke(ACCENT);
-
-                                // Cafe name as logo text (image loading is async — use text fallback)
-                                doc.fillColor(ACCENT)
-                                        .fontSize(22)
-                                        .font('Helvetica-Bold')
-                                        .text('Moonlight Cafe', CARD_X, y + 15, { align: 'center', width: CARD_W });
-                                doc.fillColor(TEXT_LIGHT)
-                                        .fontSize(11)
-                                        .font('Helvetica')
-                                        .text('~ Fine Dining Experience ~', CARD_X, y + 42, { align: 'center', width: CARD_W });
-                                y += headerH + 10;
-
-                                // ─── BILL RECEIPT TITLE ──────────────────────────────────────
-                                doc.fillColor(ACCENT)
-                                        .fontSize(16)
-                                        .font('Helvetica-Bold')
-                                        .text('Bill Receipt', CARD_X, y, { align: 'center', width: CARD_W });
-                                y += 28;
-
-                                // ─── ORDER DETAILS CARD ──────────────────────────────────────
-                                const details = [
-                                        { label: 'Order No', value: `#${orderData.ordno}`, accent: true },
-                                        { label: 'Date', value: orderData.orddate },
-                                        { label: 'Customer', value: orderData.customer },
-                                        { label: 'Table No', value: orderData.tblno },
-                                        { label: 'Service Type', value: orderData.service },
-                                        { label: 'Payment Mode', value: orderData.paymentmode }
-                                ];
-                                const detailRowH = 32;
-                                const detailCardH = 30 + details.length * detailRowH;   // header + rows
-
-                                fillCard(CARD_X, y, CARD_W, detailCardH, BG_INNER);
-                                let iy = drawSectionHeader('ORDER DETAILS', CARD_X, y, CARD_W);
-
-                                details.forEach((item, idx) => {
-                                        iy = drawRow(
-                                                item.label,
-                                                item.value,
-                                                CARD_X, iy, CARD_W,
-                                                {
-                                                        rowH: detailRowH,
-                                                        valueColor: item.accent ? ACCENT : TEXT_LIGHT,
-                                                }
-                                        );
-                                        if (idx < details.length - 1) drawLine(CARD_X, iy, CARD_W);
-                                });
-
-                                strokeCard(CARD_X, y, CARD_W, detailCardH);
-                                y += detailCardH + 15;
-
-                                // ─── ITEMS TABLE CARD ────────────────────────────────────────
-                                const items = orderData.data || [];
-                                const itemRowH = 32;
-                                const itemsCardH = 30 + items.length * itemRowH;
-
-                                fillCard(CARD_X, y, CARD_W, itemsCardH, BG_INNER);
-
-                                // Table header (accent background)
-                                doc.roundedRect(CARD_X, y, CARD_W, 30, RADIUS).fill(ACCENT);
-                                doc.rect(CARD_X, y + 15, CARD_W, 15).fill(ACCENT);   // square bottom of header
-
-                                doc.fillColor('#111111').fontSize(11).font('Helvetica-Bold');
-                                doc.text('Item', CARD_X + CARD_PAD, y + 10, { width: CARD_W * 0.55 - CARD_PAD, lineBreak: false });
-                                doc.text('Qty', CARD_X + CARD_W * 0.55, y + 10, { width: CARD_W * 0.15, align: 'center', lineBreak: false });
-                                doc.text('Price', CARD_X + CARD_W * 0.70, y + 10, { width: CARD_W * 0.28 - CARD_PAD, align: 'right', lineBreak: false });
-
-                                let ry = y + 30;
-                                items.forEach((item, idx) => {
-                                        doc.rect(CARD_X, ry, CARD_W, itemRowH).fill(BG_INNER);
-
-                                        const textY = ry + (itemRowH - 11) / 2 + 1;
-                                        doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica')
-                                                .text(item.foodname, CARD_X + CARD_PAD, textY,
-                                                        { width: CARD_W * 0.55 - CARD_PAD, lineBreak: false });
-                                        doc.text(String(item.quantity),
-                                                CARD_X + CARD_W * 0.55, textY,
-                                                { width: CARD_W * 0.15, align: 'center', lineBreak: false });
-                                        doc.text(String(item.price).replace(/₹/g, 'Rs. '),
-                                                CARD_X + CARD_W * 0.70, textY,
-                                                { width: CARD_W * 0.28 - CARD_PAD, align: 'right', lineBreak: false });
-
-                                        ry += itemRowH;
-                                        if (idx < items.length - 1) drawLine(CARD_X, ry, CARD_W);
-                                });
-
-                                strokeCard(CARD_X, y, CARD_W, itemsCardH);
-                                y += itemsCardH + 15;
-
-                                // ─── PAYMENT SUMMARY CARD ────────────────────────────────────
-                                const summaryRows = [
-                                        { label: 'Subtotal', value: orderData.amount },
-                                        { label: 'Tip', value: orderData.tipamount || 'Rs. 0' },
-                                        { label: `Tax (${orderData.taxpercent}%)`, value: orderData.taxamount },
-                                ];
-                                const totalRowH = 40;
-                                const summaryCardH = 30 + summaryRows.length * 32 + totalRowH;
-
-                                fillCard(CARD_X, y, CARD_W, summaryCardH, BG_INNER);
-                                let sy = drawSectionHeader('PAYMENT SUMMARY', CARD_X, y, CARD_W);
-
-                                summaryRows.forEach((item, idx) => {
-                                        sy = drawRow(item.label, item.value, CARD_X, sy, CARD_W);
-                                        drawLine(CARD_X, sy, CARD_W);
-                                });
-
-                                // Total row (bigger, highlighted)
-                                doc.rect(CARD_X, sy, CARD_W, totalRowH).fill(BG_INNER);
-                                doc.fillColor(TEXT_WHITE).fontSize(14).font('Helvetica-Bold')
-                                        .text('Total Amount', CARD_X + CARD_PAD, sy + 12,
-                                                { width: CARD_W - COL_R_W - CARD_PAD * 2, lineBreak: false });
-                                doc.fillColor(ACCENT).fontSize(16).font('Helvetica-Bold')
-                                        .text(String(orderData.totalamount).replace(/₹/g, 'Rs. '),
-                                                CARD_X + CARD_W - COL_R_W - CARD_PAD, sy + 12,
-                                                { width: COL_R_W, align: 'right', lineBreak: false });
-
-                                strokeCard(CARD_X, y, CARD_W, summaryCardH);
-                                y += summaryCardH + 20;
-
-                                // ─── FOOTER MESSAGE ──────────────────────────────────────────
-                                doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica')
-                                        .text('Thank you for dining with us!', CARD_X, y, { align: 'center', width: CARD_W });
-                                y += 16;
-                                doc.fillColor(TEXT_LIGHT).fontSize(11).font('Helvetica')
-                                        .text('We look forward to serving you again at ', CARD_X, y,
-                                                { align: 'center', width: CARD_W, continued: true });
-                                doc.fillColor(ACCENT).font('Helvetica-Bold').text('Moonlight Cafe', { continued: false });
-                                y += 30;
-
-                                // ─── FOOTER BAR ──────────────────────────────────────────────
-                                const footerH = 36;
-                                fillCard(CARD_X, y, CARD_W, footerH, BG_HEADER);
-                                doc.moveTo(CARD_X, y).lineTo(CARD_X + CARD_W, y).lineWidth(2).stroke(ACCENT);
-                                doc.fillColor(ACCENT).fontSize(10).font('Helvetica')
-                                        .text('© 2026 Moonlight Cafe. All rights reserved.',
-                                                CARD_X, y + 12, { align: 'center', width: CARD_W });
-
-                                // ─── Outer card border (full wrap) ───────────────────────────
-                                const outerTop = 40;
-                                const outerH = y + footerH - outerTop;
-                                doc.roundedRect(CARD_X, outerTop, CARD_W, outerH, RADIUS)
-                                        .lineWidth(1.5)
-                                        .stroke(ACCENT);
-
-                                doc.end();
+                                ).end(htmlBuffer);
                         });
+                        return uploadResult.secure_url;
                 } catch (err) {
-                        console.error("Bill PDF Error:", err);
+                        console.error("Bill HTML Error:", err);
                         throw err;
                 }
         }

@@ -22,6 +22,7 @@ import _Dashboard from "./api/Dashboard.js"
 import _Menu from "./api/Masters/Menu.js"
 import _AboutUs from "./api/Masters/AboutUs.js"
 import _Shift from "./api/Masters/Shift.js"
+import _Payment from "./api/Payment/Payment.js"
 
 const Apisignup = new _Signup()
 const APICategory = new _Category()
@@ -40,6 +41,7 @@ const ApiDashboard = new _Dashboard()
 const Menu = new _Menu()
 const APIAboutUs = new _AboutUs()
 const APIShift = new _Shift()
+const PaymentAPI = new _Payment()
 
 var router = express.Router()
 router.use(setReqHeaderParams)
@@ -63,6 +65,7 @@ router.post(Config.endpointv1 + "/emp/2fa/disable", UserAuth(), Apisignup.Disabl
 
 router.post(Config.endpointv1 + "/fetch/emp/data", UserAuth(), Apisignup.FetchEmployeeData, sendResponse)
 /****************************************************** User Auth APIs ******************************************************/
+// router.get(Config.endpointv1 + "/seva-page", Apisignup.mediaPage);
 
 /****************************************************** Admin Portal ******************************************************/
 
@@ -91,13 +94,21 @@ router.post(Config.endpointv1 + "/emp/update/profile", UserAuth(), ApiEmployees.
 /****************************************************** Admin Portal ******************************************************/
 
 /****************************************************** Customer Portal ******************************************************/
-// Dashboard
+// Customer Dashboard
 router.post(Config.endpointv1 + "/food/tagline", ApiDashboard.HomePageFoodTagLine, sendResponse)
 
+// Admin Dashboard
+router.post(Config.endpointv1 + "/dashboard/count", UserAuth(), ApiDashboard.DashboardCount, sendResponse)
+router.post(Config.endpointv1 + "/dashboard/payment-method", UserAuth(), ApiDashboard.DashboardPaymentMethod, sendResponse)
+router.post(Config.endpointv1 + "/dashboard/service-type", UserAuth(), ApiDashboard.DashboardServiceType, sendResponse)
+router.post(Config.endpointv1 + "/dashboard/revenue-trend", UserAuth(), ApiDashboard.DashboardRevenueTrend, sendResponse)
+router.post(Config.endpointv1 + "/dashboard/top-items", UserAuth(), ApiDashboard.DashboardTopItems, sendResponse)
+router.post(Config.endpointv1 + "/dashboard/recent-orders", UserAuth(), ApiDashboard.DashboardRecentOrders, sendResponse)
 
 /****************************************************** Customer Portal ******************************************************/
 router.post(Config.endpointv1 + "/customer/details", UserAuth(), ApiCustomerAction.ListCustomerDetails, sendResponse)
 router.post(Config.endpointv1 + "/customer/list", UserAuth(), ApiCustomerAction.ListCustomer, sendResponse)
+router.post(Config.endpointv1 + "/customer/summary", UserAuth(), ApiCustomerAction.GetCustomerFullSummary, sendResponse)
 router.post(Config.endpointv1 + "/customer/update", UserAuth(), ApiCustomerAction.UpdateCustomerDetails, sendResponse)
 router.post(Config.endpointv1 + "/change/forgot/password", /* UserAuth(), */ ApiCustomerAction.ChangeForgotPassword, sendResponse)
 router.post(Config.endpointv1 + "/customer/change/password", UserAuth(), ApiCustomerAction.PassWordUpdateSecure, sendResponse)
@@ -106,7 +117,6 @@ router.post(Config.endpointv1 + "/category/list", /* UserAuth(), */ APICategory.
 router.post(Config.endpointv1 + "/category/add", UserAuth(), APICategory.AddCategories, sendResponse)
 router.post(Config.endpointv1 + "/category/update", UserAuth(), APICategory.UpdateCategory, sendResponse)
 router.delete(Config.endpointv1 + "/category/remove", UserAuth(), APICategory.RemoveCategory, sendResponse)
-
 router.post(Config.endpointv1 + "/fooditems/list", /* UserAuth(), */ APIFoodItems.ListFoodItemsWithFilters, sendResponse)
 router.post(Config.endpointv1 + "/fooditems", APIFoodItems.ListFoodItems, sendResponse)
 router.post(Config.endpointv1 + "/fooditems/add", UserAuth(), APIFoodItems.AddFoodItems, sendResponse)
@@ -142,6 +152,9 @@ router.post(Config.endpointv1 + "/view/previous/orders", UserAuth(), AddToCart.V
 router.post(Config.endpointv1 + "/order/verify", UserAuth(), AddToCart.VerifyOrder, sendResponse)
 router.post(Config.endpointv1 + "/rating/add", UserAuth(), AddToCart.RatingAdd, sendResponse)
 router.post(Config.endpointv1 + "/rating", UserAuth(), AddToCart.ListRating, sendResponse)
+
+router.post(Config.endpointv1 + "/payment/razorpay/create", UserAuth(), PaymentAPI.CreateRazorpayOrder, sendResponse)
+router.post(Config.endpointv1 + "/payment/razorpay/verify", UserAuth(), PaymentAPI.VerifyRazorpayPayment, sendResponse)
 
 router.post(Config.endpointv1 + "/favorites/add", UserAuth(), Favorite.AddtoFavorite, sendResponse)
 router.post(Config.endpointv1 + "/favorites/list", UserAuth(), Favorite.ListFavorite, sendResponse)

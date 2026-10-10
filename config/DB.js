@@ -446,7 +446,6 @@ class DB {
                     Config.gmail_client_secret,
                     "https://developers.google.com/oauthplayground"
                 );
-                
                 oAuth2Client.setCredentials({ refresh_token: Config.gmail_refresh_token });
                 const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
 

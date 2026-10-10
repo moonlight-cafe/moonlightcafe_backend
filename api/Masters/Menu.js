@@ -127,7 +127,7 @@ export default class Menu {
                 }
         }
 
-        async AddUpdatePermissions(req, res, next) {
+                async AddUpdatePermissions(req, res, next) {
                 try {
                         const body = req.body || {}
                         const rawList = Array.isArray(body)
@@ -151,36 +151,32 @@ export default class Menu {
 
                         if (employeeid) {
                                 deleteFilter.employeeid = new ObjectId(employeeid)
+                        } else {
+                                deleteFilter.$or = [{ employeeid: null }, { employeeid: { $exists: false } }]
                         }
 
                         await MainDB.DeleteMany("tblcafe_permissions", new _Permissions(), deleteFilter)
 
-                        const mergeRight = (obj, key) => {
-                                if (!obj || typeof obj !== "object") return undefined
-                                if (obj[key] !== undefined) return obj[key]
-                                const selfKey = `self_${key}`
-                                const allKey = `all_${key}`
-                                if (obj[selfKey] === undefined && obj[allKey] === undefined) return undefined
-                                return Math.max(obj[selfKey] ?? 0, obj[allKey] ?? 0)
-                        }
-
                         const payloadList = rawList.map((item) => {
-                                if (!item || typeof item !== "object") return item
-                                const patched = { ...item }
-                                if (roleid && !patched.roleid) patched.roleid = roleid
-                                if (employeeid && !patched.employeeid) patched.employeeid = employeeid
+                                if (!item || typeof item !== "object") return null
+                                const view = item.view === 1 || item.view === true ? 1 : 0
+                                const insert = view === 1 && (item.insert === 1 || item.insert === true) ? 1 : 0
+                                const update = view === 1 && (item.update === 1 || item.update === true) ? 1 : 0
+                                const del = view === 1 && (item.delete === 1 || item.delete === true) ? 1 : 0
 
-                                const view = mergeRight(patched, "view")
-                                const insert = mergeRight(patched, "insert")
-                                const update = mergeRight(patched, "update")
-                                const del = mergeRight(patched, "delete")
-
-                                if (view !== undefined) patched.view = view
-                                if (insert !== undefined) patched.insert = insert
-                                if (update !== undefined) patched.update = update
-                                if (del !== undefined) patched.delete = del
-                                return patched
-                        })
+                                return {
+                                        roleid: new ObjectId(roleid),
+                                        employeeid: employeeid ? new ObjectId(employeeid) : null,
+                                        menu_id: item.menu_id ? new ObjectId(item.menu_id) : new ObjectId(),
+                                        menu_name: item.menu_name || "",
+                                        menu_alias: item.menu_alias || "",
+                                        view: view,
+                                        insert: insert,
+                                        update: update,
+                                        delete: del,
+                                        status: 1
+                                }
+                        }).filter(Boolean)
 
                         if (payloadList.length) {
                                 await MainDB.InsertMany("tblcafe_permissions", new _Permissions(), payloadList)
@@ -214,60 +210,71 @@ export default class Menu {
                                 return next()
                         }
 
-                        const match = employeeid
-                                ? { employeeid: new ObjectId(employeeid) }
-                                : { roleid: new ObjectId(roleid) }
+                        // Always fetch all active menus from tblcafe_menu
+                        const menuresp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [
+                                { $match: { isactive: 1 } },
+                                { $sort: { displayorder: 1, _id: 1 } }
+                        ])
+                        const menus = menuresp.ResultData || []
 
-                        const fetchdata = await MainDB.getmenual("tblcafe_permissions", new _Permissions(), [{ $match: match }, { $sort: { _id: 1 } }]);
-                        let data = fetchdata.ResultData || []
+                        // Fetch employee-specific permissions if employeeid is passed
+                        let permRecords = []
+                        if (employeeid) {
+                                const empPermResp = await MainDB.getmenual("tblcafe_permissions", new _Permissions(), [
+                                        { $match: { employeeid: new ObjectId(employeeid) } },
+                                        { $sort: { _id: 1 } }
+                                ])
+                                permRecords = empPermResp.ResultData || []
+                        }
 
-                        if (!data.length) {
-                                const menuresp = await MainDB.getmenual("tblcafe_menu", new _MenuModel(), [{ $match: { isactive: 1 } }, { $sort: { displayorder: 1 } }])
-                                const menus = menuresp.ResultData || []
+                        // If no employee-specific permissions found (or only roleid passed), fetch role permissions
+                        if (!permRecords.length && roleid) {
+                                const rolePermResp = await MainDB.getmenual("tblcafe_permissions", new _Permissions(), [
+                                        { $match: { roleid: new ObjectId(roleid), $or: [{ employeeid: null }, { employeeid: { $exists: false } }] } },
+                                        { $sort: { _id: 1 } }
+                                ])
+                                permRecords = rolePermResp.ResultData || []
+                        }
 
-                                data = menus.map((menu) => ({
-                                        _id: new ObjectId(),
-                                        roleid: roleid,
-                                        employeeid: employeeid || null,
+                        const permMap = {}
+                        permRecords.forEach((p) => {
+                                if (p.menu_id) permMap[p.menu_id.toString()] = p
+                                if (p.menu_alias) permMap[p.menu_alias.toLowerCase()] = p
+                                if (p.menu_name) permMap[p.menu_name.toLowerCase()] = p
+                        })
+
+                        const data = menus.map((menu) => {
+                                const matched = permMap[menu._id.toString()] ||
+                                                (menu.redirecturl && permMap[menu.redirecturl.toLowerCase()]) ||
+                                                permMap[menu.name.toLowerCase()]
+
+                                let view = matched ? (matched.view ? 1 : 0) : (permRecords.length === 0 && menu.defaultpermission === 1 ? 1 : 0)
+                                let insert = matched ? (matched.insert ? 1 : 0) : (permRecords.length === 0 && menu.defaultpermission === 1 ? 1 : 0)
+                                let update = matched ? (matched.update ? 1 : 0) : (permRecords.length === 0 && menu.defaultpermission === 1 ? 1 : 0)
+                                let del = matched ? (matched.delete ? 1 : 0) : (permRecords.length === 0 && menu.defaultpermission === 1 ? 1 : 0)
+
+                                if (view === 0) {
+                                        insert = 0
+                                        update = 0
+                                        del = 0
+                                }
+
+                                return {
+                                        _id: matched?._id || new ObjectId(),
+                                        roleid: roleid ? new ObjectId(roleid) : (matched?.roleid ?? null),
+                                        employeeid: employeeid ? new ObjectId(employeeid) : null,
                                         menu_id: menu._id,
                                         menu_name: menu.name,
                                         menu_alias: menu.redirecturl || menu.name,
-                                        view: 0,
-                                        insert: 0,
-                                        update: 0,
-                                        delete: 0,
-                                }))
-                        }
-
-                        const mergeRight = (obj, key) => {
-                                if (!obj || typeof obj !== "object") return undefined
-                                if (obj[key] !== undefined) return obj[key]
-                                const selfKey = `self_${key}`
-                                const allKey = `all_${key}`
-                                if (obj[selfKey] === undefined && obj[allKey] === undefined) return undefined
-                                return Math.max(obj[selfKey] ?? 0, obj[allKey] ?? 0)
-                        }
-
-                        data = data.map((item) => {
-                                if (!item || typeof item !== "object") return item
-                                const view = mergeRight(item, "view")
-                                const insert = mergeRight(item, "insert")
-                                const update = mergeRight(item, "update")
-                                const del = mergeRight(item, "delete")
-
-                                return {
-                                        _id: item._id ?? null,
-                                        roleid: item.roleid ?? roleid ?? null,
-                                        employeeid: item.employeeid ?? employeeid ?? null,
-                                        menu_id: item.menu_id ?? null,
-                                        menu_name: item.menu_name ?? "",
-                                        menu_alias: item.menu_alias ?? "",
-                                        view: view === undefined ? 1 : view,
-                                        insert: insert === undefined ? 1 : insert,
-                                        update: update === undefined ? 1 : update,
-                                        delete: del === undefined ? 1 : del
+                                        icon: menu.icon || "",
+                                        displayorder: menu.displayorder || 0,
+                                        view: view,
+                                        insert: insert,
+                                        update: update,
+                                        delete: del
                                 }
                         })
+
                         req.ResponseBody = {
                                 status: 200,
                                 message: Config.resstatuscode['200'],
